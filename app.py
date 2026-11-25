@@ -22,7 +22,10 @@ from extractor import extract_pdf_data
 from nlp_engine import extract_keywords_tfidf
 from ai_summarizer import analyze_paper
 from database import save_paper, get_all_papers, get_paper_by_id, delete_paper, search_papers
-from evidence_agent import infer_intent, search_and_rank_evidence, synthesize_evidence, get_autocomplete_suggestion
+from evidence_agent import (
+    infer_intent, search_and_rank_evidence, synthesize_evidence,
+    get_autocomplete_suggestion, plan_research_papers, analyze_approved_papers
+)
 
 BASE_DIR = Path(__file__).resolve().parent
 FRONTEND_DIR = BASE_DIR / "frontend"
@@ -507,6 +510,50 @@ class EvidenceRequest(BaseModel):
 class AutocompleteRequest(BaseModel):
     prefix_text: str
     cursor_context: Optional[str] = ""
+
+
+class PlanRequest(BaseModel):
+    task_text: str
+    source: Optional[str] = "all"
+
+
+class AnalyzeApprovedRequest(BaseModel):
+    task_text: str
+    approved_papers: List[Dict[str, Any]]
+
+
+@app.post("/api/agent/plan")
+def plan_papers_endpoint(
+    req: PlanRequest,
+    authorization: Optional[str] = Header(None),
+    x_user_id: Optional[str] = Header(None),
+    x_username: Optional[str] = Header(None)
+):
+    """
+    Analyzes user task in the expanded text box, formulates a planning discussion,
+    and returns relevant candidate research papers from uploads or internet.
+    """
+    active_uid, active_uname = extract_auth_user(authorization, x_user_id, x_username)
+    return plan_research_papers(
+        task_text=req.task_text,
+        source=req.source or "all",
+        current_user_id=active_uid,
+        current_username=active_uname
+    )
+
+
+@app.post("/api/agent/analyze-approved")
+def analyze_approved_endpoint(
+    req: AnalyzeApprovedRequest
+):
+    """
+    Extracts verified facts from user-approved papers and generates
+    structured analysis, executive summary, methodologies, and limitations.
+    """
+    return analyze_approved_papers(
+        task_text=req.task_text,
+        approved_papers=req.approved_papers
+    )
 
 
 @app.post("/api/agent/evidence")
