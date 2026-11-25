@@ -36,12 +36,15 @@
             position: sticky;
             top: 0;
             z-index: 100;
+            flex-wrap: wrap;
+            gap: 0.75rem;
         }
 
         .workspace-doc-meta {
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 0.75rem;
+            flex-wrap: wrap;
         }
 
         .doc-title-input {
@@ -53,6 +56,7 @@
             border-radius: 4px;
             background: transparent;
             transition: all 0.2s;
+            max-width: 360px;
         }
         .doc-title-input:hover, .doc-title-input:focus {
             background: #f1f5f9;
@@ -71,6 +75,8 @@
             display: inline-flex;
             align-items: center;
             gap: 0.35rem;
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
         .doc-stats-bar {
@@ -339,7 +345,9 @@
             top: 57px;
             right: 0;
             bottom: 0;
-            width: 480px;
+            width: min(480px, 100vw);
+            max-width: 100vw;
+            box-sizing: border-box;
             background: #ffffff;
             border-left: 1px solid #cbd5e1;
             box-shadow: -4px 0 24px rgba(0,0,0,0.1);
@@ -1334,6 +1342,9 @@
             const words = text.trim().split(/\s+/).filter(Boolean).length;
             document.getElementById("stat-words").textContent = words;
             document.getElementById("stat-read-time").textContent = `${Math.ceil(words / 200)} min`;
+            const refsCount = document.querySelectorAll("#doc-references-container p").length;
+            const statCitEl = document.getElementById("stat-citations");
+            if (statCitEl) statCitEl.textContent = refsCount;
         }
 
         function escapeHtml(str) {

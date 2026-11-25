@@ -131,11 +131,15 @@ def search_and_rank_evidence(
         if norm_title:
             seen_titles.add(norm_title)
 
-        # Relevance scoring
+        # Relevance scoring based on true topical term overlap
         text_corpus = f"{doc.get('title', '')} {doc.get('abstract', '')} {doc.get('summary', '')} {' '.join([k.get('keyword', '') if isinstance(k, dict) else str(k) for k in doc.get('keywords', [])])}".lower()
-        score = sum(1.5 for term in search_terms if term in text_corpus)
+        match_count = sum(1 for term in search_terms if term in text_corpus)
 
-        # Baseline bonus for complete metadata
+        # Topical filtering: only consider papers with substantive overlap or domain relevance
+        if match_count == 0 and len(search_terms) > 0:
+            continue
+
+        score = match_count * 2.5
         if doc.get("doi"):
             score += 1.0
         if doc.get("evidence_stance") == "opposing":
