@@ -748,6 +748,8 @@
                         const score = (typeof k === 'object' && k.relevance_score) ? `(${Math.round(k.relevance_score * 100)}%)` : '';
                         return `<span class="tag-pill">${escapeHtml(kwText)} ${score}</span>`;
                     }).join("");
+                } else if (doc.total_words === 0 || (doc.file_meta && doc.file_meta.total_words === 0)) {
+                    kwContainer.innerHTML = `<span class="tag-pill" style="background: #fef3c7; color: #92400e; border-color: #fde68a;">Scanned / Vector Printout (0 text words extracted)</span>`;
                 } else {
                     kwContainer.innerHTML = `<span style="font-size: 0.82rem; color: var(--text-muted);">No key concepts extracted.</span>`;
                 }
@@ -755,7 +757,14 @@
                 // 2. Summary (100–200 Words)
                 const summaryBox = document.getElementById("paper-summary");
                 const summaryWordBadge = document.getElementById("summary-word-badge");
-                const summaryText = doc.summary || doc.abstract || "Summary unavailable.";
+                let summaryText = (doc.summary || doc.abstract || "").trim();
+                if (!summaryText) {
+                    if (doc.total_words === 0 || (doc.file_meta && doc.file_meta.total_words === 0)) {
+                        summaryText = "Notice: This PDF does not contain an embedded digital text layer (such as a scanned document, rasterized pages, or vector-drawn printout). Automated text extraction yielded zero words. For automated keyphrase mining and executive summarization, please upload a digital PDF with selectable text.";
+                    } else {
+                        summaryText = "Summary unavailable or pending generation.";
+                    }
+                }
                 summaryBox.textContent = summaryText;
 
                 const wordCount = doc.summary_word_count || summaryText.trim().split(/\s+/).filter(Boolean).length;

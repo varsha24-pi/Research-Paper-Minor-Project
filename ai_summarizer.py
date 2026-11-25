@@ -49,6 +49,15 @@ def heuristic_nlp_summary(full_text: str, abstract: str, sections: List[Dict[str
         summary_candidate = " ".join(sentences[:5])
 
     summary = bound_word_count(summary_candidate, min_words=100, max_words=200)
+    if not summary:
+        if not full_text.strip():
+            summary = (
+                "Notice: This PDF does not contain an embedded digital text layer (such as a scanned document, "
+                "rasterized pages, or vector-drawn printout). Automated text extraction yielded zero words. "
+                "For automated keyphrase mining and executive summarization, please upload a digital PDF with selectable text."
+            )
+        else:
+            summary = bound_word_count(full_text[:1500], min_words=80, max_words=200)
 
     # 2. Extract Methodology, Research Problem, Key Findings from sections
     methodology = "Proposed architecture, experimental design, and analytical pipeline described in the paper."

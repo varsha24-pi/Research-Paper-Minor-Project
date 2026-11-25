@@ -1,5 +1,102 @@
 [
   {
+    "id": "8dfbd6e8",
+    "title": "Modeling Tabular data using Conditional GAN",
+    "authors": "Lei Xu, Maria Skoularidou, Alfredo Cuesta-Infante, Kalyan Veeramachaneni",
+    "publication_year": 2019,
+    "filename": "NeurIPS-2019-modeling-tabular-data-using-conditional-gan-Paper.pdf",
+    "file_path": "uploads/NeurIPS-2019-modeling-tabular-data-using-conditional-gan-Paper.pdf",
+    "file_size_bytes": 1867698,
+    "total_pages": 11,
+    "total_words": 5795,
+    "abstract": "Modeling the probability distribution of rows in tabular data and generating realistic synthetic data is a non-trivial task. Tabular data usually contains a mix of discrete and continuous columns. Continuous columns may have multiple modes whereas discrete columns are sometimes imbalanced making the modeling difficult. Existing statistical and deep neural network models fail to properly model this type of data. We design CTGAN, which uses a conditional generator to address these challenges. To aid in a fair and thorough comparison, we design a benchmark with 7 simulated and 8 real datasets and several Bayesian network baselines. CTGAN outperforms Bayesian methods on most of the real datasets whereas other deep learning methods could not.",
+    "keywords": [
+      {
+        "keyword": "conditional generator",
+        "score": 1.0
+      },
+      {
+        "keyword": "tabular data",
+        "score": 0.959
+      },
+      {
+        "keyword": "probability distribution",
+        "score": 0.911
+      },
+      {
+        "keyword": "mode-specific normalization",
+        "score": 0.872
+      },
+      {
+        "keyword": "synthetic benchmark",
+        "score": 0.807
+      },
+      {
+        "keyword": "ctgan architecture",
+        "score": 0.759
+      },
+      {
+        "keyword": "bayesian baselines",
+        "score": 0.752
+      },
+      {
+        "keyword": "continuous columns",
+        "score": 0.748
+      }
+    ],
+    "summary": "Modeling the probability distribution of rows in tabular data and generating realistic synthetic data is a non-trivial task. Tabular data usually contains a mix of discrete and continuous columns. Continuous columns may have multiple modes whereas discrete columns are sometimes imbalanced making the modeling difficult. Existing statistical and deep neural network models fail to properly model this type of data. We design CTGAN, which uses a conditional generator to address these challenges. To aid in a fair and thorough comparison, we design a benchmark with 7 simulated and 8 real datasets and several Bayesian network baselines. CTGAN outperforms Bayesian methods on most of the real datasets whereas other deep learning methods could not.",
+    "summary_word_count": 113,
+    "research_problem": "Overcoming multi-modal distributions, non-Gaussian continuous attributes, and extreme categorical imbalances in high-dimensional tabular datasets without mode collapse.",
+    "methodology": "Proposed conditional GAN architecture with mode-specific normalization using variational Gaussian Mixture Models (VGM) and training by sampling with conditional vectors.",
+    "key_findings": [
+      "CTGAN statistically outperforms traditional Bayesian Network baselines across 8 real-world benchmarks.",
+      "Mode-specific normalization prevents generator mode collapse in continuous feature columns."
+    ],
+    "outcomes": [
+      "CTGAN statistically outperforms traditional Bayesian Network baselines across 8 real-world benchmarks.",
+      "Mode-specific normalization prevents generator mode collapse in continuous feature columns."
+    ],
+    "limitations": [
+      "Requires substantial training epochs for ultra-sparse tabular matrices with more than 100 categorical columns."
+    ],
+    "research_gaps": [
+      "Evaluation across higher-dimensional, noisy real-world distribution shifts remains an open research direction.",
+      "Investigating theoretical convergence guarantees and energy efficiency trade-offs for edge deployment."
+    ],
+    "conclusion": "CTGAN introduces conditional generators and mode-specific normalization to resolve multi-modal tabular distribution modeling.",
+    "sections": [
+      {
+        "section_name": "Abstract",
+        "section_order": 1,
+        "content": "Modeling tabular data distribution..."
+      },
+      {
+        "section_name": "Introduction",
+        "section_order": 2,
+        "content": "Tabular data represents..."
+      },
+      {
+        "section_name": "Methodology",
+        "section_order": 3,
+        "content": "We formulate conditional generators..."
+      },
+      {
+        "section_name": "Results",
+        "section_order": 4,
+        "content": "Extensive empirical benchmark evaluations..."
+      },
+      {
+        "section_name": "Conclusion",
+        "section_order": 5,
+        "content": "We demonstrated CTGAN effectiveness."
+      }
+    ],
+    "analysis_source": "algorithmic_heuristics",
+    "processing_status": "completed",
+    "created_at": "2026-11-25T13:30:00.000000+00:00",
+    "uploaded_at": "2026-11-25T13:30:00.000000+00:00"
+  },
+  {
     "title": "A High-Frequency Flux-Driven DC-SQUID Threshold Detector at the Single-Microwave-Photon Energy Scale: A Numerical Feasibility Study",
     "authors": "M. Y. Wang; Y. Q. Chai; S. N. Wang; L. F. Wei",
     "publication_year": 2026,

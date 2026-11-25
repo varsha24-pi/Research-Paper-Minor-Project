@@ -380,11 +380,9 @@
                                 ${formatDate(p.uploaded_at)}
                             </span>
                         </div>
-                        ${p.summary ? `
-                            <p style="font-size: 0.84rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 0.85rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-                                ${escapeHtml(p.summary)}
-                            </p>
-                        ` : ""}
+                        <p style="font-size: 0.84rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 0.85rem; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; background: #f8fafc; padding: 0.5rem 0.75rem; border-radius: 6px; border-left: 3px solid var(--primary);">
+                            <strong style="color: var(--text-main);">Summary:</strong> ${escapeHtml(p.summary || p.abstract || "Detailed synthesis and methodology analysis available in paper view.")}
+                        </p>
                         ${p.keywords && p.keywords.length > 0 ? `
                             <div class="tag-list" style="margin-bottom: 0.75rem;">
                                 ${p.keywords.slice(0, 5).map(k => {

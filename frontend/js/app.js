@@ -196,13 +196,24 @@ async function loadDashboardStatsAndRecentPapers() {
                     </span>
                 </div>
                 ${paper.keywords && paper.keywords.length > 0 ? `
-                    <div class="tag-list">
-                        ${paper.keywords.slice(0, 5).map(k => {
+                    <div class="tag-list" style="margin-top: 0.5rem;">
+                        ${paper.keywords.slice(0, 6).map(k => {
                             const kw = typeof k === 'object' ? (k.keyword || '') : String(k);
                             return `<a href="search.html?q=${encodeURIComponent(kw)}" class="tag" style="text-decoration: none;" title="Search '${escapeHtml(kw)}' across all papers">${escapeHtml(kw)}</a>`;
                         }).join("")}
                     </div>
                 ` : ""}
+
+                <div class="paper-summary-preview" style="margin: 0.75rem 0 0.5rem; font-size: 0.88rem; color: #475569; line-height: 1.55; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; background: #f8fafc; padding: 0.65rem 0.85rem; border-radius: 6px; border-left: 3px solid var(--primary);">
+                    <strong style="color: var(--text-main);">Summary:</strong> ${escapeHtml(paper.summary || paper.abstract || "Extractive NLP synthesis and methodology insights available in paper details.")}
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; margin-top: 0.6rem;">
+                    <a href="viewer.html?id=${paper.id}" class="btn btn-secondary" style="font-size: 0.82rem; padding: 0.35rem 0.85rem; display: inline-flex; align-items: center; gap: 0.35rem; font-weight: 600;">
+                        <span>View Full Summary & Intelligence</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg>
+                    </a>
+                </div>
             </div>
         `).join("");
 
