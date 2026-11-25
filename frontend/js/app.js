@@ -3,9 +3,10 @@
  * Communicates with FastAPI Backend at http://127.0.0.1:8000
  */
 
-const API_BASE_URL = (typeof window !== "undefined" && window.location.origin && window.location.origin.startsWith("http")) 
+window.API_BASE_URL = (typeof window !== "undefined" && window.location.origin && window.location.origin.startsWith("http")) 
     ? window.location.origin 
     : "http://127.0.0.1:8000";
+var API_BASE_URL = window.API_BASE_URL;
 
 // =============================================================================
 // 1. Initialization on DOM Content Loaded

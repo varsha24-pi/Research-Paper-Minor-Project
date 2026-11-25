@@ -576,6 +576,32 @@
 
     <script src="js/app.js"></script>
     <script>
+        // Ensure API_BASE_URL is always defined
+        const API_BASE_URL = (typeof window !== "undefined" && window.location.origin && window.location.origin.startsWith("http")) 
+            ? window.location.origin 
+            : (window.API_BASE_URL || "http://127.0.0.1:8000");
+
+        function getAuthHeaders() {
+            const headers = {};
+            const token = localStorage.getItem("access_token");
+            const uid = localStorage.getItem("user_id");
+            const uname = localStorage.getItem("username");
+            if (token) headers["Authorization"] = `Bearer ${token}`;
+            if (uid) headers["X-User-Id"] = uid;
+            if (uname) headers["X-Username"] = uname;
+            return headers;
+        }
+
+        function escapeHtml(str) {
+            if (!str) return "";
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
         // State
         let currentSource = "all";
         let candidatePapers = [];
