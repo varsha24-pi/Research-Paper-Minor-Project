@@ -27,7 +27,7 @@ UPLOAD_DIR = BASE_DIR / "uploads"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 app = FastAPI(
-    title="Research Paper Intelligence System (Minor Project)",
+    title="Researcher - Research Paper Intelligence System",
     description="Automated text extraction, TF-IDF keyphrase ranking, AI summarization, and MongoDB Atlas persistence.",
     version="1.0.0"
 )

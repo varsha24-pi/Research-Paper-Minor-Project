@@ -1,5 +1,5 @@
 /**
- * PaperIntel AI - Client-side Application Logic (Vanilla JavaScript)
+ * Researcher - Client-side Application Logic (Vanilla JavaScript)
  * Communicates with FastAPI Backend at http://127.0.0.1:8000
  */
 

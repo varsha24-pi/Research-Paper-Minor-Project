@@ -1,11 +1,11 @@
-# AI-Powered Research Paper Intelligence System
+# Researcher — AI-Powered Research Paper Intelligence System
 ### Electronics & Communication Engineering — Minor Project Version
 
 ---
 
 ## 1. Project Overview & Scope
 
-The **Minor Project Version** of the **AI-Powered Research Paper Intelligence System** delivers an automated, explainable, and fault-tolerant literature analysis platform. It provides high-throughput PDF parsing, statistical keyphrase extraction, bounded AI executive summarization, and weighted relevance search.
+The **Minor Project Version** of **Researcher** delivers an automated, explainable, and fault-tolerant literature analysis platform. It provides high-throughput PDF parsing, statistical keyphrase extraction, bounded AI executive summarization, and weighted relevance search.
 
 It solves the fundamental problem faced by researchers, professors, and university students: **rapidly understanding whether a 15+ page scientific paper is relevant without having to read through dense, multi-column layouts manually.**
 
