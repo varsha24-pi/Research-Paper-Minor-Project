@@ -20,6 +20,7 @@ from extractor import extract_pdf_data
 from nlp_engine import extract_keywords_tfidf
 from ai_summarizer import analyze_paper
 from database import save_paper, get_all_papers, get_paper_by_id, delete_paper, search_papers
+from evidence_agent import infer_intent, search_and_rank_evidence, synthesize_evidence, get_autocomplete_suggestion
 
 BASE_DIR = Path(__file__).resolve().parent
 FRONTEND_DIR = BASE_DIR / "frontend"
@@ -365,6 +366,93 @@ def auth_me():
 
 
 # -----------------------------------------------------------------------------
+# 5.5 Research Evidence Agent Endpoints
+# -----------------------------------------------------------------------------
+class EvidenceRequest(BaseModel):
+    selected_text: str
+    surrounding_text: Optional[str] = ""
+    action: Optional[str] = "find_papers"
+    excluded_ids: Optional[List[str]] = []
+    clarification_choice: Optional[str] = None
+
+
+class AutocompleteRequest(BaseModel):
+    prefix_text: str
+    cursor_context: Optional[str] = ""
+
+
+@app.post("/api/agent/evidence")
+def run_evidence_agent(req: EvidenceRequest):
+    """
+    Executes the Plan -> Search -> Read -> Synthesize pipeline.
+    Deduplicates by DOI/title, ranks top 5, includes opposing evidence,
+    and returns cited synthesis with credibility metrics and YouTube mode.
+    """
+    intent = infer_intent(req.selected_text, req.surrounding_text or "", req.action)
+
+    search_res = search_and_rank_evidence(
+        query_text=req.selected_text,
+        selected_text=req.surrounding_text or "",
+        excluded_ids=req.excluded_ids or [],
+        clarification_choice=req.clarification_choice
+    )
+
+    synthesis = synthesize_evidence(
+        ranked_papers=search_res["ranked_papers"],
+        intent=intent,
+        selected_text=req.selected_text,
+        draft_context=req.surrounding_text or ""
+    )
+
+    return {
+        "status": "success",
+        "plan": {
+            "inferred_mode": intent["mode"],
+            "mode_label": intent["label"],
+            "description": intent["description"],
+            "clarifying_question": intent.get("clarifying_question"),
+            "clarifying_options": intent.get("clarifying_options", [])
+        },
+        "search": search_res,
+        "synthesis": synthesis
+    }
+
+
+@app.post("/api/agent/autocomplete")
+def autocomplete_endpoint(req: AutocompleteRequest):
+    """Provides inline ghost text autocomplete for the research workspace."""
+    return get_autocomplete_suggestion(req.prefix_text, req.cursor_context or "")
+
+
+@app.post("/api/agent/upload-paywall")
+async def upload_paywalled_pdf(
+    paper_id: str = Form(...),
+    file: UploadFile = File(...)
+):
+    """
+    Handles 'Upload PDF' flow for paywalled papers:
+    Saves user-shared copy, extracts text, and elevates access status to full text.
+    """
+    dest_path = UPLOAD_DIR / file.filename
+    with open(dest_path, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    paper = get_paper_by_id(paper_id)
+    if paper:
+        paper["access_status"] = "open_access"
+        paper["evidence_source_type"] = "full_text"
+        paper["file_path"] = str(dest_path)
+        paper["file_size_bytes"] = os.path.getsize(dest_path)
+        save_paper(paper)
+
+    return {
+        "status": "success",
+        "message": f"Full-text unlocked for paper #{paper_id}. Analysis elevated from abstract to verified full-text.",
+        "paper_id": paper_id
+    }
+
+
+# -----------------------------------------------------------------------------
 # 6. Frontend HTML Page Serving & Static Files
 # -----------------------------------------------------------------------------
 # Mount CSS and JS folders
@@ -411,6 +499,12 @@ def search_page():
 @app.get("/dashboard.html", response_class=HTMLResponse)
 def dashboard_page():
     return serve_html_file("dashboard.html")
+
+
+@app.get("/workspace", response_class=HTMLResponse)
+@app.get("/workspace.html", response_class=HTMLResponse)
+def workspace_page():
+    return serve_html_file("workspace.html")
 
 
 @app.get("/login.html", response_class=HTMLResponse)

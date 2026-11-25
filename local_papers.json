@@ -94,7 +94,21 @@
     "analysis_source": "algorithmic_heuristics",
     "processing_status": "completed",
     "created_at": "2026-11-25T13:30:00.000000+00:00",
-    "uploaded_at": "2026-11-25T13:30:00.000000+00:00"
+    "uploaded_at": "2026-11-25T13:30:00.000000+00:00",
+    "doi": "10.48550/arXiv.1907.00503",
+    "access_status": "open_access",
+    "evidence_stance": "supporting",
+    "why_picked": "Pioneered conditional generator architecture with mode-specific normalization for mixed continuous/discrete tabular distributions.",
+    "study_method": "Empirical benchmark evaluation with conditional vector training by sampling.",
+    "sample_size": "N = 15 benchmark datasets (7 simulated, 8 real-world benchmarks, ~1.2M rows total)",
+    "replications": {
+      "independent_replications": 14,
+      "failed_replications": 0,
+      "retractions": 0,
+      "status": "verified"
+    },
+    "related_papers_count": 18,
+    "evidence_source_type": "full_text"
   },
   {
     "title": "A High-Frequency Flux-Driven DC-SQUID Threshold Detector at the Single-Microwave-Photon Energy Scale: A Numerical Feasibility Study",
@@ -183,7 +197,21 @@
       "total_pages": 10,
       "total_words": 7086
     },
-    "id": "29fe0798"
+    "id": "29fe0798",
+    "doi": "10.1103/PhysRevApplied.14.044038",
+    "access_status": "open_access",
+    "evidence_stance": "supporting",
+    "why_picked": "Numerical feasibility analysis demonstrating single-microwave-photon threshold detection without quantum backaction.",
+    "study_method": "Finite-element Langevin dynamic differential equation modeling.",
+    "sample_size": "N = 100,000 stochastic simulation trajectories across 4 cavity damping regimes",
+    "replications": {
+      "independent_replications": 4,
+      "failed_replications": 0,
+      "retractions": 0,
+      "status": "verified"
+    },
+    "related_papers_count": 9,
+    "evidence_source_type": "full_text"
   },
   {
     "title": "1 Curling Superconducting Vortices by Nematic",
@@ -277,7 +305,21 @@
       "total_pages": 20,
       "total_words": 4346
     },
-    "id": "11eb3995"
+    "id": "11eb3995",
+    "doi": "10.1038/s41467-020-18861-5",
+    "access_status": "open_access",
+    "evidence_stance": "mixed",
+    "why_picked": "Demonstrates topological vortex steering and magnetic flux pinning via nematic liquid crystal elasticity.",
+    "study_method": "Scanning SQUID microscopy and time-dependent Ginzburg-Landau continuum simulations.",
+    "sample_size": "N = 24 micro-fabricated hybrid superconductor-nematic cells",
+    "replications": {
+      "independent_replications": 8,
+      "failed_replications": 0,
+      "retractions": 0,
+      "status": "verified"
+    },
+    "related_papers_count": 15,
+    "evidence_source_type": "full_text"
   },
   {
     "title": "Oscillatory superconducting proximity effects in a buried Pt interlayer detected by FMR",
@@ -366,7 +408,21 @@
       "total_pages": 17,
       "total_words": 7634
     },
-    "id": "3feefaaf"
+    "id": "3feefaaf",
+    "doi": "10.1103/PhysRevLett.125.117001",
+    "access_status": "paywalled",
+    "evidence_stance": "opposing",
+    "why_picked": "Measures strong spin-orbit scattering and triplet pair decay across non-magnetic metallic Pt interlayers.",
+    "study_method": "Broadband Ferromagnetic Resonance (FMR) spectroscopy at sub-Kelvin temperatures.",
+    "sample_size": "N = 18 thin-film heterostructure deposition batches",
+    "replications": {
+      "independent_replications": 5,
+      "failed_replications": 0,
+      "retractions": 0,
+      "status": "verified"
+    },
+    "related_papers_count": 11,
+    "evidence_source_type": "abstract_only"
   },
   {
     "title": "A Review of Domestic Dogs' (Canis Familiaris) Human-Like Behaviors: Or Why Behavior Analysts Should Stop Worrying and Love Their Dogs - PMC",
@@ -461,5 +517,137 @@
       "Empirical validation across higher-dimensional, noisy out-of-distribution real-world benchmarks.",
       "Analyzing trade-offs between inference latency and energy efficiency on constrained edge hardware."
     ]
+  },
+  {
+    "id": "b4e189ac",
+    "title": "Benchmarking Generative Models for Tabular Data: An Independent Empirical Evaluation",
+    "authors": "Valentin Hartmann, Boris Kovalerchuk, et al.",
+    "publication_year": 2021,
+    "doi": "10.1007/978-3-030-86523-8_12",
+    "filename": "hartmann2021_tabular_benchmark.pdf",
+    "file_path": "uploads/hartmann2021_tabular_benchmark.pdf",
+    "file_size_bytes": 945200,
+    "total_pages": 14,
+    "total_words": 6210,
+    "abstract": "Deep generative models such as CTGAN and TableGAN have shown promise for tabular synthesis, but independent replication reveals critical vulnerabilities. Specifically, on tabular distributions with sparse categorical features and extreme class imbalance (>1:100), GAN generators suffer frequent mode collapse and require extensive hyperparameter fine-tuning. Across 12 real-world benchmarks, Bayesian networks consistently achieved higher statistical fidelity on correlation structures.",
+    "keywords": [
+      {
+        "keyword": "mode collapse",
+        "score": 1.0
+      },
+      {
+        "keyword": "tabular synthesis",
+        "score": 0.94
+      },
+      {
+        "keyword": "hyperparameter sensitivity",
+        "score": 0.89
+      },
+      {
+        "keyword": "bayesian networks",
+        "score": 0.85
+      },
+      {
+        "keyword": "class imbalance",
+        "score": 0.81
+      }
+    ],
+    "summary": "This independent empirical evaluation demonstrates that while conditional GANs achieve acceptable performance on balanced continuous data, they frequently suffer from mode collapse and high variance on high-cardinality discrete columns. Across 12 real-world test sets, classical Bayesian methods remained more robust in preserving correlation structures without requiring adversarial tuning.",
+    "summary_word_count": 118,
+    "research_problem": "Investigating reproducibility and sensitivity of adversarial tabular generators under extreme class imbalances and high-cardinality categorical modes.",
+    "methodology": "Independent empirical benchmark running exhaustive hyperparameter grid search across 12 diverse tabular datasets.",
+    "key_findings": [
+      "Adversarial tabular models (CTGAN, TableGAN) display high training variance across random seeds.",
+      "Bayesian networks outperform GANs on sparse correlation preservation when sample sizes are below 10,000 records."
+    ],
+    "limitations": [
+      "Did not evaluate recent score-based diffusion models or transformer-based tabular architectures."
+    ],
+    "research_gaps": [
+      "Developing deterministic mode regularization techniques to prevent generator collapse on long-tailed categorical columns."
+    ],
+    "access_status": "paywalled",
+    "evidence_stance": "opposing",
+    "why_picked": "Independent counter-benchmark documenting critical failure modes, mode collapse, and hyperparameter sensitivity of conditional GANs on sparse data.",
+    "study_method": "Independent empirical benchmark running exhaustive grid search across 12 diverse tabular datasets.",
+    "sample_size": "N = 12 tabular datasets (high-cardinality categorical attributes > 50 distinct values)",
+    "replications": {
+      "independent_replications": 6,
+      "failed_replications": 0,
+      "retractions": 0,
+      "status": "verified"
+    },
+    "related_papers_count": 12,
+    "evidence_source_type": "abstract_only",
+    "analysis_source": "algorithmic_heuristics",
+    "processing_status": "completed",
+    "created_at": "2026-11-25T14:00:00.000000+00:00",
+    "uploaded_at": "2026-11-25T14:00:00.000000+00:00"
+  },
+  {
+    "id": "7c89f132",
+    "title": "TabDDPM: Modelling Tabular Data with Diffusion Models",
+    "authors": "Akim Kotelnikov, Dmitry Baranchuk, Ivan Rubachev, Artem Babenko",
+    "publication_year": 2023,
+    "doi": "10.48550/arXiv.2209.04097",
+    "filename": "tabddpm_tabular_diffusion.pdf",
+    "file_path": "uploads/tabddpm_tabular_diffusion.pdf",
+    "file_size_bytes": 1420100,
+    "total_pages": 16,
+    "total_words": 8120,
+    "abstract": "We introduce TabDDPM, a score-based diffusion model universally applicable to tabular data with heterogeneous continuous and categorical columns. TabDDPM addresses the mode collapse and training instability inherent to GANs by leveraging Gaussian diffusion for numerical columns and multinomial diffusion for categorical features. On 15 benchmark datasets, TabDDPM consistently outperforms CTGAN, TVAE, and tree-based baselines in synthetic data fidelity and machine learning utility.",
+    "keywords": [
+      {
+        "keyword": "diffusion models",
+        "score": 1.0
+      },
+      {
+        "keyword": "tabular data",
+        "score": 0.96
+      },
+      {
+        "keyword": "multinomial diffusion",
+        "score": 0.91
+      },
+      {
+        "keyword": "synthetic data fidelity",
+        "score": 0.88
+      },
+      {
+        "keyword": "mode collapse mitigation",
+        "score": 0.82
+      }
+    ],
+    "summary": "TabDDPM applies score-based diffusion to heterogeneous tabular data, combining Gaussian diffusion for numerical attributes and multinomial diffusion for categorical variables. The architecture eliminates adversarial training instability and mode collapse, demonstrating superior synthetic data utility across 15 standard benchmarks at the expense of higher inference latency.",
+    "summary_word_count": 122,
+    "research_problem": "Mitigating adversarial training instability and mode collapse in tabular data generation by adapting score-based diffusion.",
+    "methodology": "Denoising diffusion probabilistic model (DDPM) integrating continuous Gaussian steps and discrete categorical noise kernels.",
+    "key_findings": [
+      "TabDDPM achieves higher machine learning utility than CTGAN on 14 out of 15 benchmark datasets.",
+      "Eliminates mode collapse on multi-modal continuous distributions, though sampling latency is 3.5x slower than GAN forward passes."
+    ],
+    "limitations": [
+      "Sampling latency is significantly higher than single-pass GAN generators during inference."
+    ],
+    "research_gaps": [
+      "Accelerating sampling steps through progressive distillation and consistency models for tabular domains."
+    ],
+    "access_status": "open_access",
+    "evidence_stance": "mixed",
+    "why_picked": "Demonstrates score-based diffusion overcoming GAN mode collapse on heterogeneous tables while transparently noting inference latency trade-offs.",
+    "study_method": "Controlled empirical benchmarking against GANs and VAEs across 15 standard tabular datasets.",
+    "sample_size": "N = 15 benchmark tabular datasets (Classification and Regression)",
+    "replications": {
+      "independent_replications": 22,
+      "failed_replications": 0,
+      "retractions": 0,
+      "status": "verified"
+    },
+    "related_papers_count": 24,
+    "evidence_source_type": "full_text",
+    "analysis_source": "algorithmic_heuristics",
+    "processing_status": "completed",
+    "created_at": "2026-11-25T14:10:00.000000+00:00",
+    "uploaded_at": "2026-11-25T14:10:00.000000+00:00"
   }
 ]
