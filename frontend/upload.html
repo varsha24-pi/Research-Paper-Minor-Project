@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload or Import Paper - Research Paper Intelligence System</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .upload-tab-buttons {
+            display: flex;
+            background: #f1f5f9;
+            padding: 0.35rem;
+            border-radius: var(--radius-md);
+            margin-bottom: 1.75rem;
+            gap: 0.35rem;
+        }
+
+        .upload-tab-btn {
+            flex: 1;
+            padding: 0.65rem 1rem;
+            border: none;
+            background: none;
+            border-radius: calc(var(--radius-md) - 2px);
+            font-size: 0.92rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: all 0.2s ease;
+        }
+
+        .upload-tab-btn.active {
+            background: #ffffff;
+            color: var(--primary);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+
+        .tab-panel {
+            display: none;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        .url-helper-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+            padding: 0.3rem 0.65rem;
+            border-radius: var(--radius-sm);
+            font-size: 0.78rem;
+            margin-top: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- =======================================================================
+         1. Header & Navigation Bar
+         ======================================================================= -->
+    <header class="navbar">
+        <a href="index.html" class="brand-container">
+            <div class="brand-icon-box">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path>
+                    <path d="M6 6h10"></path>
+                    <path d="M6 10h10"></path>
+                </svg>
+            </div>
+            <div>
+                <span class="brand-title">Research Paper <span>Intelligence</span></span>
+                <span class="brand-subtitle">Academic Analysis & Literature Comparison Platform</span>
+            </div>
+        </a>
+
+        <nav>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="upload.html" class="active">Upload / Import</a></li>
+                <li><a href="search.html">Search</a></li>
+                <li><a href="papers.html">Paper Library</a></li>
+            </ul>
+        </nav>
+
+        <div class="nav-right">
+            <div id="system-status" class="status-badge">
+                <span class="status-dot"></span>
+                <span id="status-text">Checking API...</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- =======================================================================
+         2. Main Content
+         ======================================================================= -->
+    <main class="main-content">
+        <div class="breadcrumb-nav">
+            <a href="dashboard.html">
+                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                </svg>
+                Dashboard
+            </a>
+            <span>/</span>
+            <span>Document Ingestion</span>
+        </div>
+
+        <div class="upload-card">
+            <div style="text-align: center; margin-bottom: 1.75rem;">
+                <h1 style="font-size: 1.75rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.35rem; letter-spacing: -0.02em;">
+                    Ingest Academic Research Paper
+                </h1>
+                <p style="color: var(--text-muted); font-size: 0.92rem;">
+                    Upload a PDF or paste an academic URL to extract structural sections and run multi-field AI analysis.
+                </p>
+            </div>
+
+            <!-- Ingestion Method Tabs -->
+            <div class="upload-tab-buttons">
+                <button type="button" class="upload-tab-btn active" id="tab-btn-pdf" onclick="switchUploadTab('pdf')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+                    Upload Local PDF
+                </button>
+                <button type="button" class="upload-tab-btn" id="tab-btn-url" onclick="switchUploadTab('url')">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                    Import via Paper Link / arXiv
+                </button>
+            </div>
+
+            <!-- User Auth Status Banner -->
+            <div id="upload-auth-banner" style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 0.65rem 1rem; margin-bottom: 1.5rem; font-size: 0.88rem; display: flex; justify-content: space-between; align-items: center;">
+                <span id="upload-auth-text">You are uploading as Guest Researcher.</span>
+                <a id="upload-auth-link" href="login.html?redirect=upload.html" style="color: var(--primary); font-weight: 600; text-decoration: none;">Sign In or Register →</a>
+            </div>
+
+            <!-- TAB 1: PDF Upload Form -->
+            <div id="panel-pdf" class="tab-panel active">
+                <form id="upload-form">
+                    <div id="dropzone" class="dropzone">
+                        <input type="file" id="pdf-file-input" accept=".pdf,application/pdf" multiple style="display: none;" />
+                        <div class="dropzone-icon-box">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                        </div>
+                        <div class="dropzone-text">Click or drag & drop research paper PDF(s) here</div>
+                        <div class="dropzone-subtext">Supports single or multiple PDF papers (automatic title & section extraction)</div>
+                    </div>
+
+                    <div id="file-preview" class="file-preview-card" style="display: none;">
+                        <div class="file-info">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary);">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                <polyline points="14 2 14 8 20 8"></polyline>
+                            </svg>
+                            <div>
+                                <div id="preview-filename" class="file-name">filename.pdf</div>
+                                <div id="preview-filesize" class="file-size">0 KB</div>
+                            </div>
+                        </div>
+                        <button type="button" id="remove-file-btn" class="remove-file-btn" title="Remove file">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                        </button>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 1.25rem;">
+                        <label for="paper-title" class="form-label">Paper Title (Optional)</label>
+                        <input type="text" id="paper-title" class="form-control" placeholder="Leave blank for automatic detection from PDF metadata" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="paper-authors" class="form-label">Authors (Optional)</label>
+                        <input type="text" id="paper-authors" class="form-control" placeholder="e.g. Vaswani, Shazeer (comma-separated)" />
+                    </div>
+
+                    <button type="submit" id="submit-btn" class="btn btn-primary" style="width: 100%; padding: 0.85rem;" disabled>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path>
+                        </svg>
+                        Extract Intelligence & Ingest PDF
+                    </button>
+                </form>
+            </div>
+
+            <!-- TAB 2: URL Import Form -->
+            <div id="panel-url" class="tab-panel">
+                <form id="url-import-form">
+                    <div class="form-group">
+                        <label for="paper-url-input" class="form-label">Research Paper Link / URL</label>
+                        <input 
+                            type="url" 
+                            id="paper-url-input" 
+                            class="form-control" 
+                            placeholder="https://arxiv.org/abs/1706.03762 or direct PDF URL" 
+                            required 
+                        />
+                        <div class="url-helper-badge">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                            arXiv abstracts automatically resolve to full-text PDF. Protected with anti-SSRF guards.
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="url-paper-title" class="form-label">Paper Title (Optional)</label>
+                        <input type="text" id="url-paper-title" class="form-control" placeholder="Leave blank to extract title automatically" />
+                    </div>
+
+                    <div class="form-group">
+                        <label for="url-paper-authors" class="form-label">Authors (Optional)</label>
+                        <input type="text" id="url-paper-authors" class="form-control" placeholder="Optional author names" />
+                    </div>
+
+                    <button type="submit" id="url-submit-btn" class="btn btn-primary" style="width: 100%; padding: 0.85rem;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7 10 12 15 17 10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Download & Analyze Paper Link
+                    </button>
+                </form>
+            </div>
+
+            <!-- Upload Progress Indicator -->
+            <div id="upload-progress-wrapper" style="display: none; margin-top: 1.5rem;">
+                <div style="display: flex; justify-content: space-between; font-size: 0.88rem; margin-bottom: 0.5rem;">
+                    <span id="progress-status-text" style="font-weight: 600; color: var(--text-main);">Processing paper...</span>
+                    <span id="progress-percentage" style="color: var(--primary); font-weight: 700;">45%</span>
+                </div>
+                <div style="width: 100%; height: 8px; background: #e2e8f0; border-radius: 9999px; overflow: hidden;">
+                    <div id="progress-bar-fill" style="width: 45%; height: 100%; background: var(--primary); border-radius: 9999px; transition: width 0.3s ease;"></div>
+                </div>
+            </div>
+
+            <!-- Ingestion Result Preview Card -->
+            <div id="result-card" style="display: none; margin-top: 2rem; border-top: 1px solid var(--border-color); padding-top: 1.75rem;">
+                <div class="alert alert-success" id="result-alert-box" style="margin-bottom: 1.25rem;">
+                    <span id="result-message">Paper processed and indexed successfully!</span>
+                </div>
+
+                <div style="background: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: 1.5rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap;">
+                        <div>
+                            <span id="res-source-badge" class="badge" style="background: #e0f2fe; color: #0284c7; margin-bottom: 0.5rem; display: inline-block;">PDF Ingestion</span>
+                            <h3 id="res-title" style="font-size: 1.25rem; font-weight: 700; color: var(--text-main); margin-bottom: 0.35rem;">Paper Title</h3>
+                            <div id="res-authors" style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0.75rem;">Authors</div>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <a id="res-view-btn" href="#" class="btn btn-primary" style="padding: 0.5rem 1rem; font-size: 0.88rem;">
+                                View Full Intelligence →
+                            </a>
+                            <a id="res-pdf-btn" href="#" target="_blank" class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.88rem;">
+                                Open PDF
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- 100-200 Word Summary Snippet -->
+                    <div style="margin-top: 1rem; background: #ffffff; border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+                            <span style="font-size: 0.82rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">AI Executive Summary</span>
+                            <span id="res-word-count" style="font-size: 0.75rem; background: #f1f5f9; color: var(--text-secondary); padding: 0.15rem 0.45rem; border-radius: 4px;">150 words</span>
+                        </div>
+                        <p id="res-summary" style="font-size: 0.9rem; color: var(--text-secondary); line-height: 1.55; margin: 0;">Summary text...</p>
+                    </div>
+
+                    <!-- Key Outcomes -->
+                    <div id="res-outcomes-wrapper" style="margin-top: 0.75rem;">
+                        <span style="font-size: 0.82rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;">Key Findings:</span>
+                        <ul id="res-outcomes" style="margin-top: 0.35rem; padding-left: 1.25rem; font-size: 0.88rem; color: var(--text-secondary);"></ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>AI-Powered Research Paper Intelligence System • College Minor Project</p>
+    </footer>
+
+    <script src="js/app.js"></script>
+    <script>
+        function switchUploadTab(mode) {
+            document.getElementById("tab-btn-pdf").classList.toggle("active", mode === "pdf");
+            document.getElementById("tab-btn-url").classList.toggle("active", mode === "url");
+            document.getElementById("panel-pdf").classList.toggle("active", mode === "pdf");
+            document.getElementById("panel-url").classList.toggle("active", mode === "url");
+            document.getElementById("result-card").style.display = "none";
+        }
+
+        let selectedPdfFiles = [];
+
+        // PDF Ingestion Setup
+        document.addEventListener("DOMContentLoaded", () => {
+            const dropzone = document.getElementById("dropzone");
+            const fileInput = document.getElementById("pdf-file-input");
+            const filePreview = document.getElementById("file-preview");
+            const submitBtn = document.getElementById("submit-btn");
+            const removeBtn = document.getElementById("remove-file-btn");
+
+            dropzone.addEventListener("click", () => fileInput.click());
+
+            ["dragenter", "dragover"].forEach(eventName => {
+                dropzone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    dropzone.classList.add("dragover");
+                });
+            });
+
+            ["dragleave", "drop"].forEach(eventName => {
+                dropzone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    dropzone.classList.remove("dragover");
+                });
+            });
+
+            dropzone.addEventListener("drop", (e) => {
+                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                    handleFilesSelection(e.dataTransfer.files);
+                }
+            });
+
+            fileInput.addEventListener("change", (e) => {
+                if (e.target.files && e.target.files.length > 0) {
+                    handleFilesSelection(e.target.files);
+                }
+            });
+
+            removeBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                selectedPdfFiles = [];
+                fileInput.value = "";
+                filePreview.style.display = "none";
+                dropzone.style.display = "block";
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    Upload & Extract Paper Intelligence
+                `;
+            });
+
+            function handleFilesSelection(files) {
+                const validPdfs = Array.from(files).filter(f => f.name.toLowerCase().endsWith(".pdf"));
+                if (validPdfs.length === 0) {
+                    alert("Please select valid PDF research paper(s).");
+                    return;
+                }
+
+                selectedPdfFiles = validPdfs;
+
+                if (selectedPdfFiles.length === 1) {
+                    const f = selectedPdfFiles[0];
+                    document.getElementById("preview-filename").textContent = f.name;
+                    document.getElementById("preview-filesize").textContent = `${(f.size / 1024).toFixed(1)} KB`;
+                    submitBtn.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                        Upload & Extract Paper Intelligence
+                    `;
+                } else {
+                    const totalSizeKb = selectedPdfFiles.reduce((acc, f) => acc + f.size, 0) / 1024;
+                    document.getElementById("preview-filename").textContent = `${selectedPdfFiles.length} PDF Papers Selected`;
+                    document.getElementById("preview-filesize").textContent = `Total: ${(totalSizeKb / 1024).toFixed(2)} MB (${selectedPdfFiles.map(f => f.name).join(", ").slice(0, 75)}...)`;
+                    submitBtn.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                        Upload & Extract ${selectedPdfFiles.length} Papers
+                    `;
+                }
+
+                dropzone.style.display = "none";
+                filePreview.style.display = "flex";
+                submitBtn.disabled = false;
+            }
+
+            // PDF Submit
+            document.getElementById("upload-form").addEventListener("submit", async (e) => {
+                e.preventDefault();
+                if (!selectedPdfFiles || selectedPdfFiles.length === 0) return;
+
+                if (selectedPdfFiles.length === 1) {
+                    const formData = new FormData();
+                    formData.append("file", selectedPdfFiles[0]);
+                    const titleVal = document.getElementById("paper-title").value.trim();
+                    const authorsVal = document.getElementById("paper-authors").value.trim();
+                    if (titleVal) formData.append("title", titleVal);
+                    if (authorsVal) formData.append("authors", authorsVal);
+
+                    await executeIngestion(`${API_BASE_URL}/documents/upload`, formData, true);
+                } else {
+                    await executeBatchIngestion(selectedPdfFiles);
+                }
+            });
+
+            // URL Submit
+            document.getElementById("url-import-form").addEventListener("submit", async (e) => {
+                e.preventDefault();
+                const urlVal = document.getElementById("paper-url-input").value.trim();
+                if (!urlVal) return;
+
+                const payload = {
+                    url: urlVal,
+                    title: document.getElementById("url-paper-title").value.trim() || null,
+                    authors: document.getElementById("url-paper-authors").value.trim() || null
+                };
+
+                await executeIngestion(`${API_BASE_URL}/documents/import-url`, JSON.stringify(payload), false);
+            });
+        });
+
+        async function executeBatchIngestion(files) {
+            const progress = document.getElementById("upload-progress-wrapper");
+            const progressText = document.getElementById("progress-status-text");
+            const progressFill = document.getElementById("progress-bar-fill");
+            const progressPct = document.getElementById("progress-percentage");
+            const resultCard = document.getElementById("result-card");
+            const submitBtn = document.getElementById("submit-btn");
+
+            submitBtn.disabled = true;
+            resultCard.style.display = "none";
+            progress.style.display = "block";
+
+            const results = [];
+            const total = files.length;
+
+            for (let i = 0; i < total; i++) {
+                const file = files[i];
+                const pct = Math.round(((i + 0.3) / total) * 100);
+                progressFill.style.width = `${pct}%`;
+                progressPct.textContent = `${pct}%`;
+                progressText.textContent = `Processing paper ${i + 1} of ${total}: ${file.name}...`;
+
+                const formData = new FormData();
+                formData.append("file", file);
+
+                try {
+                    const response = await fetch(`${API_BASE_URL}/documents/upload`, {
+                        method: "POST",
+                        body: formData
+                    });
+                    const data = await response.json();
+                    results.push(data);
+                } catch (err) {
+                    results.push({ status: "failed", title: file.name, message: err.message });
+                }
+            }
+
+            progressFill.style.width = "100%";
+            progressPct.textContent = "100%";
+            progressText.textContent = `All ${total} papers processed and added to library!`;
+
+            setTimeout(() => {
+                progress.style.display = "none";
+                submitBtn.disabled = false;
+                displayBatchResults(results);
+            }, 600);
+        }
+
+        function displayBatchResults(results) {
+            const card = document.getElementById("result-card");
+            const titleEl = document.getElementById("res-title");
+            const authorsEl = document.getElementById("res-authors");
+            const summaryEl = document.getElementById("res-summary");
+            const wordCountEl = document.getElementById("res-word-count");
+            const outcomesList = document.getElementById("res-outcomes");
+            const viewBtn = document.getElementById("res-view-btn");
+            const pdfBtn = document.getElementById("res-pdf-btn");
+            const msgEl = document.getElementById("result-message");
+            const alertBox = document.getElementById("result-alert-box");
+
+            alertBox.className = "alert alert-success";
+            msgEl.textContent = `Batch upload complete! Successfully processed and added ${results.length} papers to your library.`;
+
+            titleEl.textContent = `${results.length} Papers Added to Your Account Library`;
+            authorsEl.textContent = results.map(r => r.title || "Paper").join(" • ");
+            summaryEl.innerHTML = `
+                <div style="display: flex; flex-direction: column; gap: 0.65rem; margin-top: 0.5rem;">
+                    ${results.map((r, idx) => `
+                        <div style="background: #ffffff; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.65rem 0.85rem; display: flex; justify-content: space-between; align-items: center;">
+                            <div>
+                                <strong style="font-size: 0.92rem; color: var(--text-main);">${idx + 1}. ${escapeHtml(r.title || "Untitled Paper")}</strong>
+                                <div style="font-size: 0.78rem; color: var(--text-muted);">${escapeHtml(r.authors || "")} • ${r.total_pages || 1} Pages • ${(r.summary_word_count || 0)}w summary</div>
+                            </div>
+                            <a href="viewer.html?id=${r.document_id || r.id}" class="btn btn-secondary" style="font-size: 0.78rem; padding: 0.3rem 0.65rem;">View Summary →</a>
+                        </div>
+                    `).join("")}
+                </div>
+            `;
+
+            wordCountEl.textContent = `${results.length} papers indexed`;
+            outcomesList.innerHTML = `
+                <li>All papers are now searchable across your entire library.</li>
+                <li>You can search any keyword from all papers simultaneously.</li>
+            `;
+
+            viewBtn.textContent = "Go to Paper Library (View All)";
+            viewBtn.href = "papers.html";
+            pdfBtn.textContent = "Search All Papers";
+            pdfBtn.href = "search.html";
+
+            card.style.display = "block";
+            card.scrollIntoView({ behavior: "smooth" });
+        }
+
+        async function executeIngestion(endpoint, bodyData, isFormData) {
+            const progress = document.getElementById("upload-progress-wrapper");
+            const progressText = document.getElementById("progress-status-text");
+            const progressFill = document.getElementById("progress-bar-fill");
+            const progressPct = document.getElementById("progress-percentage");
+            const resultCard = document.getElementById("result-card");
+            const submitBtn = document.getElementById("submit-btn");
+            const urlSubmitBtn = document.getElementById("url-submit-btn");
+
+            submitBtn.disabled = true;
+            urlSubmitBtn.disabled = true;
+            resultCard.style.display = "none";
+            progress.style.display = "block";
+
+            progressText.textContent = "1/3 Transferring document & validating format...";
+            progressFill.style.width = "30%";
+            progressPct.textContent = "30%";
+
+            setTimeout(() => {
+                progressText.textContent = "2/3 Parsing structural IMRaD sections & keywords...";
+                progressFill.style.width = "65%";
+                progressPct.textContent = "65%";
+            }, 800);
+
+            try {
+                const headers = {};
+                const token = getAuthToken();
+                if (token) headers["Authorization"] = `Bearer ${token}`;
+                if (!isFormData) headers["Content-Type"] = "application/json";
+
+                const response = await fetch(endpoint, {
+                    method: "POST",
+                    headers: headers,
+                    body: bodyData
+                });
+
+                const data = await response.json();
+                progressFill.style.width = "100%";
+                progressPct.textContent = "100%";
+                progressText.textContent = "3/3 Intelligence analysis complete!";
+
+                setTimeout(() => {
+                    progress.style.display = "none";
+                    submitBtn.disabled = false;
+                    urlSubmitBtn.disabled = false;
+                    displayResult(data);
+                }, 500);
+
+            } catch (err) {
+                progress.style.display = "none";
+                submitBtn.disabled = false;
+                urlSubmitBtn.disabled = false;
+                alert(`Ingestion failed: ${err.message}`);
+            }
+        }
+
+        function displayResult(data) {
+            const card = document.getElementById("result-card");
+            const titleEl = document.getElementById("res-title");
+            const authorsEl = document.getElementById("res-authors");
+            const summaryEl = document.getElementById("res-summary");
+            const wordCountEl = document.getElementById("res-word-count");
+            const outcomesList = document.getElementById("res-outcomes");
+            const viewBtn = document.getElementById("res-view-btn");
+            const pdfBtn = document.getElementById("res-pdf-btn");
+            const msgEl = document.getElementById("result-message");
+            const alertBox = document.getElementById("result-alert-box");
+
+            if (data.status === "duplicate") {
+                alertBox.className = "alert alert-info";
+                msgEl.textContent = data.message;
+            } else {
+                alertBox.className = "alert alert-success";
+                msgEl.textContent = data.message || "Paper analyzed and saved successfully!";
+            }
+
+            const docId = data.document_id;
+            titleEl.textContent = data.title || "Untitled Paper";
+            authorsEl.textContent = data.authors || "Authors not specified";
+            summaryEl.textContent = data.summary || "Summary generated.";
+            wordCountEl.textContent = `${data.summary_word_count || (data.summary ? data.summary.split(' ').length : 0)} words`;
+
+            outcomesList.innerHTML = "";
+            const outcomes = data.key_findings || data.outcomes || [];
+            if (outcomes.length > 0) {
+                outcomes.slice(0, 3).forEach(o => {
+                    const li = document.createElement("li");
+                    li.textContent = o;
+                    outcomesList.appendChild(li);
+                });
+            } else {
+                outcomesList.innerHTML = "<li>Methodological outcomes indexed in paper library.</li>";
+            }
+
+            viewBtn.href = `viewer.html?id=${encodeURIComponent(docId)}`;
+            pdfBtn.href = `${API_BASE_URL}/documents/${encodeURIComponent(docId)}/pdf`;
+
+            card.style.display = "block";
+            card.scrollIntoView({ behavior: "smooth" });
+        }
+    </script>
+</body>
+</html>

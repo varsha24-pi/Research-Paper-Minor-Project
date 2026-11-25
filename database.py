@@ -1,0 +1,300 @@
+"""
+Database Layer - Minor Project Version
+Manages persistence in MongoDB Atlas using PyMongo.
+Includes automatic local JSON fallback to ensure seamless presentations even if offline.
+"""
+
+import os
+import json
+import logging
+from typing import List, Dict, Any, Optional
+from datetime import datetime, timezone
+from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv()
+logger = logging.getLogger("minor_project.db")
+
+MONGODB_URI = os.getenv("MONGODB_URI", "")
+DB_NAME = os.getenv("MONGODB_DB_NAME", "research_paper_minor_db")
+
+LOCAL_STORAGE_FILE = Path(__file__).parent / "local_papers.json"
+
+_client = None
+_db = None
+
+
+def get_mongo_db():
+    """Returns connected MongoDB database, or None if unconfigured/unreachable."""
+    global _client, _db
+    if _db is not None:
+        return _db
+
+    if not MONGODB_URI:
+        return None
+
+    try:
+        from pymongo import MongoClient
+        _client = MongoClient(
+            MONGODB_URI,
+            serverSelectionTimeoutMS=2500,
+            connectTimeoutMS=4000
+        )
+        _client.admin.command("ping")
+        _db = _client[DB_NAME]
+        logger.info("Successfully connected to MongoDB Atlas.")
+        return _db
+    except Exception as e:
+        logger.warning(f"Could not connect to MongoDB Atlas ({e}). Operating with local storage.")
+        return None
+
+
+# ---------------- Local Storage Helpers ----------------
+
+def _load_local_papers() -> List[Dict[str, Any]]:
+    if not LOCAL_STORAGE_FILE.exists():
+        return []
+    try:
+        with open(LOCAL_STORAGE_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return []
+
+
+def _save_local_papers(papers: List[Dict[str, Any]]):
+    try:
+        with open(LOCAL_STORAGE_FILE, "w", encoding="utf-8") as f:
+            json.dump(papers, f, indent=2, default=str)
+    except Exception as e:
+        logger.error(f"Error saving to local storage: {e}")
+
+
+def _normalize_paper_doc(doc: Dict[str, Any]) -> Dict[str, Any]:
+    """Ensures consistent field names across both MongoDB and local JSON store."""
+    d = dict(doc)
+    d["id"] = str(d.get("_id", d.get("id", "")))
+    if "_id" in d:
+        del d["_id"]
+
+    # Normalize dates
+    if "uploaded_at" not in d:
+        d["uploaded_at"] = d.get("created_at") or datetime.now(timezone.utc).isoformat()
+    if "created_at" not in d:
+        d["created_at"] = d["uploaded_at"]
+
+    # Ensure outcomes and key_findings are synchronized
+    if "key_findings" not in d and "outcomes" in d:
+        d["key_findings"] = d["outcomes"]
+    elif "outcomes" not in d and "key_findings" in d:
+        d["outcomes"] = d["key_findings"]
+
+    # Ensure research_gaps is present
+    if "research_gaps" not in d or not isinstance(d.get("research_gaps"), list):
+        d["research_gaps"] = d.get("research_gaps") or []
+
+    # Ensure file_meta exists
+    if "file_meta" not in d or not isinstance(d.get("file_meta"), dict):
+        d["file_meta"] = {
+            "file_path": d.get("file_path", ""),
+            "file_size_bytes": d.get("file_size_bytes", 0),
+            "total_pages": d.get("total_pages", 1),
+            "total_words": d.get("total_words", 0)
+        }
+
+    return d
+
+
+# ---------------- CRUD Operations ----------------
+
+def save_paper(paper_data: Dict[str, Any]) -> Dict[str, Any]:
+    """Saves a paper record into MongoDB Atlas or local JSON store."""
+    record = dict(paper_data)
+    now_iso = datetime.now(timezone.utc).isoformat()
+    record["created_at"] = now_iso
+    record["uploaded_at"] = now_iso
+    record["processing_status"] = "completed"
+
+    if "file_meta" not in record:
+        record["file_meta"] = {
+            "file_path": record.get("file_path", ""),
+            "file_size_bytes": record.get("file_size_bytes", 0),
+            "total_pages": record.get("total_pages", 1),
+            "total_words": record.get("total_words", 0)
+        }
+
+    if "outcomes" not in record and "key_findings" in record:
+        record["outcomes"] = record["key_findings"]
+
+    db = get_mongo_db()
+    if db is not None:
+        try:
+            result = db.papers.insert_one(record)
+            record["id"] = str(result.inserted_id)
+            if "_id" in record:
+                del record["_id"]
+            return _normalize_paper_doc(record)
+        except Exception as e:
+            logger.warning(f"MongoDB insert failed ({e}), falling back to local storage.")
+
+    # Local fallback
+    import uuid
+    record["id"] = str(uuid.uuid4())[:8]
+    local_papers = _load_local_papers()
+    local_papers.insert(0, record)
+    _save_local_papers(local_papers)
+    return _normalize_paper_doc(record)
+
+
+def get_all_papers(search_query: Optional[str] = None) -> List[Dict[str, Any]]:
+    """Retrieves all papers, optionally filtering by query."""
+    db = get_mongo_db()
+    if db is not None:
+        try:
+            query = {}
+            if search_query and search_query.strip():
+                regex = {"$regex": search_query.strip(), "$options": "i"}
+                query = {
+                    "$or": [
+                        {"title": regex},
+                        {"abstract": regex},
+                        {"authors": regex},
+                        {"keywords.keyword": regex}
+                    ]
+                }
+            cursor = db.papers.find(query).sort("created_at", -1)
+            return [_normalize_paper_doc(d) for d in cursor]
+        except Exception as e:
+            logger.warning(f"MongoDB query failed ({e}), reading from local storage.")
+
+    # Local fallback
+    papers = _load_local_papers()
+    normalized = [_normalize_paper_doc(p) for p in papers]
+    if not search_query or not isinstance(search_query, str) or not search_query.strip():
+        return normalized
+
+    sq = search_query.lower().strip()
+    results = []
+    for p in normalized:
+        title = (p.get("title") or "").lower()
+        authors = (p.get("authors") or "").lower()
+        abstract = (p.get("abstract") or "").lower()
+        kws = " ".join([k.get("keyword", "") if isinstance(k, dict) else str(k) for k in p.get("keywords", [])]).lower()
+        if sq in title or sq in authors or sq in abstract or sq in kws:
+            results.append(p)
+    return results
+
+
+def get_paper_by_id(paper_id: str) -> Optional[Dict[str, Any]]:
+    """Retrieves a single paper by its ID."""
+    db = get_mongo_db()
+    if db is not None:
+        try:
+            from bson import ObjectId
+            try:
+                oid = ObjectId(paper_id)
+                doc = db.papers.find_one({"_id": oid})
+            except Exception:
+                doc = db.papers.find_one({"id": paper_id})
+            if doc:
+                return _normalize_paper_doc(doc)
+        except Exception:
+            pass
+
+    # Local fallback
+    papers = _load_local_papers()
+    for p in papers:
+        if str(p.get("id")) == str(paper_id):
+            return _normalize_paper_doc(p)
+    return None
+
+
+def delete_paper(paper_id: str) -> bool:
+    """Deletes a paper from storage."""
+    db = get_mongo_db()
+    if db is not None:
+        try:
+            from bson import ObjectId
+            try:
+                oid = ObjectId(paper_id)
+                res = db.papers.delete_one({"_id": oid})
+            except Exception:
+                res = db.papers.delete_one({"id": paper_id})
+            if res.deleted_count > 0:
+                return True
+        except Exception:
+            pass
+
+    # Local fallback
+    papers = _load_local_papers()
+    initial_len = len(papers)
+    updated = [p for p in papers if str(p.get("id")) != str(paper_id)]
+    if len(updated) < initial_len:
+        _save_local_papers(updated)
+        return True
+    return False
+
+
+def search_papers(query_str: str) -> List[Dict[str, Any]]:
+    """Performs intelligent search matching across paper titles, abstracts, and keywords."""
+    all_docs = get_all_papers()
+    if not query_str or not query_str.strip():
+        return []
+
+    tokens = [t.lower() for t in query_str.strip().split() if len(t) > 1]
+    matches = []
+
+    for doc in all_docs:
+        score = 0.0
+        matched_field = "content"
+        title_l = (doc.get("title") or "").lower()
+        abstract_l = (doc.get("abstract") or "").lower()
+        summary_l = (doc.get("summary") or "").lower()
+        kws_list = [k.get("keyword", "").lower() if isinstance(k, dict) else str(k).lower() for k in doc.get("keywords", [])]
+        kws_str = " ".join(kws_list)
+
+        for token in tokens:
+            if token in title_l:
+                score += 10.0
+                matched_field = "title"
+            if any(token in kw for kw in kws_list):
+                score += 6.0
+                if matched_field != "title":
+                    matched_field = "keywords"
+            if token in summary_l:
+                score += 4.0
+                if matched_field == "content":
+                    matched_field = "summary"
+            if token in abstract_l:
+                score += 3.0
+                if matched_field == "content":
+                    matched_field = "abstract"
+
+        if score > 0:
+            snippet_source = doc.get("summary") or doc.get("abstract") or "Matched research paper."
+            snippet = snippet_source[:260] + ("..." if len(snippet_source) > 260 else "")
+            matched_kws = [k for k in kws_list if any(t in k for t in tokens)]
+            match_pct = int(round(min(score / 15.0, 1.0) * 100))
+            matches.append({
+                "id": doc.get("id"),
+                "document_id": doc.get("id"),
+                "title": doc.get("title"),
+                "authors": doc.get("authors"),
+                "publication_year": doc.get("publication_year"),
+                "total_pages": doc.get("total_pages") or (doc.get("file_meta") or {}).get("total_pages", 1),
+                "uploaded_at": doc.get("uploaded_at") or doc.get("created_at"),
+                "relevance_score": round(min(score / 15.0, 1.0), 2),
+                "score": round(min(score / 15.0, 1.0), 2),
+                "relevance_percentage": f"{match_pct}% Match",
+                "matched_field": matched_field,
+                "matched_keywords": matched_kws,
+                "snippet": snippet,
+                "summary": doc.get("summary", ""),
+                "research_problem": doc.get("research_problem", ""),
+                "methodology": doc.get("methodology", ""),
+                "key_findings": doc.get("key_findings", []),
+                "research_gaps": doc.get("research_gaps", []),
+                "keywords": [k.get("keyword") if isinstance(k, dict) else str(k) for k in doc.get("keywords", [])[:8]]
+            })
+
+    matches.sort(key=lambda x: x["relevance_score"], reverse=True)
+    return matches

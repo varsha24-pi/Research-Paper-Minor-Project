@@ -1,0 +1,27 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment variables & secrets (CRITICAL: Do not commit secrets)
+.env
+.env.local
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Uploaded PDF documents (keep .gitkeep, ignore local test PDFs)
+uploads/*
+!uploads/.gitkeep
+
+# IDE & Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
