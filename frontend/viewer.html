@@ -655,7 +655,9 @@
 
             if (!currentDocId) {
                 try {
-                    const listRes = await fetch(`${API_BASE_URL}/documents/?limit=1`);
+                    const listRes = await fetch(`${API_BASE_URL}/documents/?limit=1`, {
+                        headers: typeof getAuthHeaders === "function" ? getAuthHeaders() : {}
+                    });
                     if (listRes.ok) {
                         const listData = await listRes.json();
                         if (listData.documents && listData.documents.length > 0) {
@@ -694,8 +696,13 @@
             const failMsg = document.getElementById("failed-banner-msg");
 
             try {
-                const response = await fetch(`${API_BASE_URL}/documents/${docId}`);
+                const response = await fetch(`${API_BASE_URL}/documents/${docId}`, {
+                    headers: typeof getAuthHeaders === "function" ? getAuthHeaders() : {}
+                });
                 if (!response.ok) {
+                    if (response.status === 404 || response.status === 403) {
+                        throw new Error(`Research paper #${docId} was not found or is private to its author. If you uploaded this paper, please sign in with your authorized account to access it.`);
+                    }
                     throw new Error(`Research paper #${docId} not found (HTTP ${response.status})`);
                 }
 
@@ -888,7 +895,10 @@
             }
 
             try {
-                const res = await fetch(`${API_BASE_URL}/documents/${docId}/retry`, { method: "POST" });
+                const res = await fetch(`${API_BASE_URL}/documents/${docId}/retry`, {
+                    method: "POST",
+                    headers: typeof getAuthHeaders === "function" ? getAuthHeaders() : {}
+                });
                 if (!res.ok) {
                     const err = await res.json();
                     throw new Error(err.detail || "Retry failed.");

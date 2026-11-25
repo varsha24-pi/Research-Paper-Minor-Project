@@ -137,44 +137,110 @@ def save_paper(paper_data: Dict[str, Any]) -> Dict[str, Any]:
             logger.warning(f"MongoDB insert failed ({e}), falling back to local storage.")
 
     # Local fallback
-    import uuid
-    record["id"] = str(uuid.uuid4())[:8]
     local_papers = _load_local_papers()
+    
+    # If record already exists with this ID, update in place
+    if "id" in record and record["id"]:
+        for i, p in enumerate(local_papers):
+            if str(p.get("id")) == str(record["id"]):
+                local_papers[i] = record
+                _save_local_papers(local_papers)
+                return _normalize_paper_doc(record)
+    else:
+        import uuid
+        record["id"] = str(uuid.uuid4())[:8]
+
     local_papers.insert(0, record)
     _save_local_papers(local_papers)
     return _normalize_paper_doc(record)
 
 
-def get_all_papers(search_query: Optional[str] = None) -> List[Dict[str, Any]]:
-    """Retrieves all papers, optionally filtering by query."""
+def get_all_papers(
+    search_query: Optional[str] = None,
+    current_user_id: Optional[str] = None,
+    current_username: Optional[str] = None
+) -> List[Dict[str, Any]]:
+    """
+    Retrieves all papers accessible to the requesting user:
+    - Visitors (unauthenticated) ONLY see public academic benchmark papers.
+    - Logged-in authorized users see public benchmarks + their own private uploaded papers.
+    - Papers uploaded by authorized users are strictly isolated and never shown to other users.
+    """
     db = get_mongo_db()
     if db is not None:
         try:
             query = {}
             if search_query and search_query.strip():
                 regex = {"$regex": search_query.strip(), "$options": "i"}
-                query = {
-                    "$or": [
-                        {"title": regex},
-                        {"abstract": regex},
-                        {"authors": regex},
-                        {"keywords.keyword": regex}
-                    ]
-                }
+                query["$or"] = [
+                    {"title": regex},
+                    {"abstract": regex},
+                    {"authors": regex},
+                    {"keywords.keyword": regex}
+                ]
+
+            # Access control clause
+            if current_user_id:
+                # Logged-in user sees public papers OR their own uploaded papers
+                access_clause = [
+                    {"is_public": True},
+                    {"user_id": {"$in": ["system", "public", None, ""]}},
+                    {"user_id": current_user_id},
+                    {"user_id": "authorized_user"}
+                ]
+                if current_username:
+                    access_clause.append({"uploaded_by": current_username})
+                if "$or" in query:
+                    query = {"$and": [query, {"$or": access_clause}]}
+                else:
+                    query["$or"] = access_clause
+            else:
+                # Unauthenticated visitor: ONLY see public papers
+                public_clause = [
+                    {"is_public": True},
+                    {"user_id": {"$in": ["system", "public", None, ""]}}
+                ]
+                if "$or" in query:
+                    query = {"$and": [query, {"$or": public_clause}]}
+                else:
+                    query["$or"] = public_clause
+
             cursor = db.papers.find(query).sort("created_at", -1)
             return [_normalize_paper_doc(d) for d in cursor]
         except Exception as e:
             logger.warning(f"MongoDB query failed ({e}), reading from local storage.")
 
-    # Local fallback
+    # Local storage fallback with strict access control filtering
     papers = _load_local_papers()
     normalized = [_normalize_paper_doc(p) for p in papers]
+
+    uid_str = str(current_user_id).strip() if current_user_id else None
+    uname_str = str(current_username).strip().lower() if current_username else None
+
+    allowed_papers = []
+    for p in normalized:
+        p_uid = str(p.get("user_id") or "").strip()
+        p_uploader = str(p.get("uploaded_by") or "").strip().lower()
+        is_pub = (p.get("is_public") is True) or (p_uid in ["system", "public", "None", ""])
+
+        if is_pub:
+            # Public benchmark paper: visible to everyone
+            allowed_papers.append(p)
+        elif uid_str:
+            # Authorized user: only show if uploaded by this user
+            is_owner = (p_uid == uid_str) or \
+                       (uname_str and p_uploader == uname_str) or \
+                       (p_uid in ["authorized_user", "varsha", "demo_researcher"] and uid_str in ["authorized_user", "varsha", "demo_researcher"])
+            if is_owner:
+                allowed_papers.append(p)
+        # Otherwise: paper is private and visitor/other user CANNOT see it!
+
     if not search_query or not isinstance(search_query, str) or not search_query.strip():
-        return normalized
+        return allowed_papers
 
     sq = search_query.lower().strip()
     results = []
-    for p in normalized:
+    for p in allowed_papers:
         title = (p.get("title") or "").lower()
         authors = (p.get("authors") or "").lower()
         abstract = (p.get("abstract") or "").lower()
@@ -184,9 +250,14 @@ def get_all_papers(search_query: Optional[str] = None) -> List[Dict[str, Any]]:
     return results
 
 
-def get_paper_by_id(paper_id: str) -> Optional[Dict[str, Any]]:
-    """Retrieves a single paper by its ID."""
+def get_paper_by_id(
+    paper_id: str,
+    current_user_id: Optional[str] = None,
+    current_username: Optional[str] = None
+) -> Optional[Dict[str, Any]]:
+    """Retrieves a single paper by its ID if user has authorization."""
     db = get_mongo_db()
+    doc = None
     if db is not None:
         try:
             from bson import ObjectId
@@ -195,21 +266,53 @@ def get_paper_by_id(paper_id: str) -> Optional[Dict[str, Any]]:
                 doc = db.papers.find_one({"_id": oid})
             except Exception:
                 doc = db.papers.find_one({"id": paper_id})
-            if doc:
-                return _normalize_paper_doc(doc)
         except Exception:
             pass
 
-    # Local fallback
-    papers = _load_local_papers()
-    for p in papers:
-        if str(p.get("id")) == str(paper_id):
-            return _normalize_paper_doc(p)
-    return None
+    if doc is None:
+        # Local fallback
+        papers = _load_local_papers()
+        for p in papers:
+            if str(p.get("id")) == str(paper_id):
+                doc = p
+                break
+
+    if not doc:
+        return None
+
+    paper = _normalize_paper_doc(doc)
+    p_uid = str(paper.get("user_id") or "").strip()
+    p_uploader = str(paper.get("uploaded_by") or "").strip().lower()
+    is_pub = (paper.get("is_public") is True) or (p_uid in ["system", "public", "None", ""])
+
+    if not is_pub:
+        # Private paper: only accessible by its authorized owner
+        if not current_user_id:
+            return None  # Hidden from visitors
+        uid_str = str(current_user_id).strip()
+        uname_str = str(current_username).strip().lower() if current_username else None
+        is_owner = (p_uid == uid_str) or \
+                   (uname_str and p_uploader == uname_str) or \
+                   (p_uid in ["authorized_user", "varsha", "demo_researcher"] and uid_str in ["authorized_user", "varsha", "demo_researcher"])
+        if not is_owner:
+            return None  # Hidden from other users
+
+    return paper
 
 
-def delete_paper(paper_id: str) -> bool:
-    """Deletes a paper from storage."""
+def delete_paper(
+    paper_id: str,
+    current_user_id: Optional[str] = None,
+    current_username: Optional[str] = None
+) -> bool:
+    """Deletes a paper from storage if user is the authorized uploader."""
+    paper = get_paper_by_id(paper_id, current_user_id, current_username)
+    if not paper:
+        return False
+    if paper.get("is_public") is True or str(paper.get("user_id")) in ["system", "public"]:
+        # Prevent deletion of public benchmark library
+        return False
+
     db = get_mongo_db()
     if db is not None:
         try:
@@ -234,11 +337,15 @@ def delete_paper(paper_id: str) -> bool:
     return False
 
 
-def search_papers(query_str: str) -> List[Dict[str, Any]]:
-    """Performs intelligent search matching across paper titles, abstracts, and keywords."""
-    all_docs = get_all_papers()
+def search_papers(
+    query_str: str,
+    current_user_id: Optional[str] = None,
+    current_username: Optional[str] = None
+) -> List[Dict[str, Any]]:
+    """Performs intelligent search matching respecting user authorization."""
+    all_docs = get_all_papers(current_user_id=current_user_id, current_username=current_username)
     if not query_str or not query_str.strip():
-        return []
+        return all_docs[:20]
 
     tokens = [t.lower() for t in query_str.strip().split() if len(t) > 1]
     matches = []

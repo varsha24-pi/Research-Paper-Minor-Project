@@ -296,7 +296,9 @@
 
                 try {
                     const startTime = performance.now();
-                    const response = await fetch(`${API_BASE_URL}/search/?q=${encodeURIComponent(query)}`);
+                    const response = await fetch(`${API_BASE_URL}/search/?q=${encodeURIComponent(query)}`, {
+                        headers: typeof getAuthHeaders === "function" ? getAuthHeaders() : {}
+                    });
                     const durationMs = Math.round(performance.now() - startTime);
 
                     if (!response.ok) {

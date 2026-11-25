@@ -92,7 +92,9 @@ def search_and_rank_evidence(
     query_text: str,
     selected_text: str = "",
     excluded_ids: Optional[List[str]] = None,
-    clarification_choice: Optional[str] = None
+    clarification_choice: Optional[str] = None,
+    current_user_id: Optional[str] = None,
+    current_username: Optional[str] = None
 ) -> Dict[str, Any]:
     """
     Search indexed academic corpus, deduplicate by DOI/title,
@@ -100,7 +102,7 @@ def search_and_rank_evidence(
     Always includes credible opposing evidence where relevant.
     """
     excluded_ids = excluded_ids or []
-    all_docs = get_all_papers()
+    all_docs = get_all_papers(current_user_id=current_user_id, current_username=current_username)
     
     # 1. Search Query Extraction
     search_terms = re.findall(r"\b[a-zA-Z0-9_-]{3,}\b", f"{query_text} {selected_text}".lower())

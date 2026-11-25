@@ -35,6 +35,20 @@ function getCurrentUser() {
     };
 }
 
+function getAuthHeaders() {
+    const headers = {};
+    const token = getAuthToken();
+    const user = getCurrentUser();
+    if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+    }
+    if (user) {
+        if (user.id) headers["X-User-Id"] = user.id;
+        if (user.username) headers["X-Username"] = user.username;
+    }
+    return headers;
+}
+
 function logoutUser() {
     localStorage.removeItem("access_token");
     localStorage.removeItem("user_id");
@@ -141,7 +155,9 @@ async function loadDashboardStatsAndRecentPapers() {
     const statKeywords = document.getElementById("stat-keywords");
 
     try {
-        const response = await fetch(`${API_BASE_URL}/documents/?limit=5`);
+        const response = await fetch(`${API_BASE_URL}/documents/?limit=5`, {
+            headers: getAuthHeaders()
+        });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
         const data = await response.json();
@@ -171,12 +187,21 @@ async function loadDashboardStatsAndRecentPapers() {
             return;
         }
 
-        // Render Recent Papers Cards
-        papersContainer.innerHTML = papers.map(paper => `
+        // Render Recent Papers Cards with Public/Private distinction
+        papersContainer.innerHTML = papers.map(paper => {
+            const isPrivate = paper.is_public === false;
+            const badgeHtml = isPrivate 
+                ? `<span style="font-size: 0.72rem; font-weight: 700; color: #b45309; background: #fef3c7; border: 1px solid #fde68a; padding: 0.15rem 0.5rem; border-radius: 9999px; display: inline-flex; align-items: center; gap: 0.25rem;">🔒 Private • Your Upload</span>`
+                : `<span style="font-size: 0.72rem; font-weight: 700; color: #0369a1; background: #e0f2fe; border: 1px solid #bae6fd; padding: 0.15rem 0.5rem; border-radius: 9999px; display: inline-flex; align-items: center; gap: 0.25rem;">🌐 Public Reference</span>`;
+
+            return `
             <div class="paper-item">
-                <a href="viewer.html?id=${paper.id}" class="paper-item-title">
-                    ${escapeHtml(paper.title || paper.filename)}
-                </a>
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.75rem;">
+                    <a href="viewer.html?id=${paper.id}" class="paper-item-title">
+                        ${escapeHtml(paper.title || paper.filename)}
+                    </a>
+                    ${badgeHtml}
+                </div>
                 <div class="paper-meta">
                     <span style="display: inline-flex; align-items: center; gap: 0.3rem;">
                         <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>

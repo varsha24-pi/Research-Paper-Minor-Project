@@ -1049,7 +1049,10 @@
                 
                 const res = await fetch(`${API_BASE}/api/agent/evidence`, {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
+                    headers: {
+                        "Content-Type": "application/json",
+                        ...(typeof getAuthHeaders === "function" ? getAuthHeaders() : {})
+                    },
                     body: JSON.stringify({
                         selected_text: selectedText || "Tabular synthesis conditional generator mode collapse",
                         surrounding_text: surroundingText,

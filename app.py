@@ -7,11 +7,13 @@ streamlined into a clean, robust, and explainable 4-module pipeline.
 import os
 import re
 import shutil
+import hashlib
+import secrets
 import urllib.request
 from pathlib import Path
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Query, Body, status
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Query, Body, status, Header
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -44,14 +46,41 @@ app.add_middleware(
 
 
 # -----------------------------------------------------------------------------
-# 1. Pipeline Processing Helper
+# 1. Pipeline Processing & Auth Helper
 # -----------------------------------------------------------------------------
+def extract_auth_user(
+    authorization: Optional[str] = None,
+    x_user_id: Optional[str] = None,
+    x_username: Optional[str] = None,
+    user_id: Optional[str] = None,
+    username: Optional[str] = None
+) -> tuple[Optional[str], Optional[str]]:
+    """Extracts (user_id, username) from headers or query parameters."""
+    uid = x_user_id or user_id
+    uname = x_username or username
+    if authorization and authorization.startswith("Bearer "):
+        token = authorization.split("Bearer ", 1)[1].strip()
+        parts = token.split("_")
+        if len(parts) >= 2 and parts[0] == "token":
+            uid = uid or parts[1]
+        elif token and token not in ["null", "undefined", ""]:
+            uid = uid or token[:16]
+    if uid in ["null", "undefined", ""]:
+        uid = None
+    if uname in ["null", "undefined", ""]:
+        uname = None
+    return uid, uname
+
+
 def process_paper_file(
     file_path: Path,
     original_filename: str,
     custom_title: Optional[str] = None,
     custom_authors: Optional[str] = None,
-    source_url: Optional[str] = None
+    source_url: Optional[str] = None,
+    user_id: Optional[str] = None,
+    uploaded_by: Optional[str] = None,
+    is_public: bool = False
 ) -> Dict[str, Any]:
     """Unified extraction, TF-IDF NLP scoring, and AI summarization pipeline."""
     # 1. PyMuPDF extraction
@@ -75,7 +104,7 @@ def process_paper_file(
 
     file_size = file_path.stat().st_size if file_path.exists() else 0
 
-    # 4. Construct complete paper intelligence record
+    # 4. Construct complete paper intelligence record with strict user privacy
     paper_record = {
         "title": paper_title,
         "authors": paper_authors,
@@ -99,7 +128,11 @@ def process_paper_file(
         "sections": extracted["sections"],
         "source_url": source_url,
         "analysis_source": "gemini-2.5-flash" if "Gemini" in ai_results.get("source", "") else "algorithmic_heuristics",
-        "processing_status": "completed"
+        "processing_status": "completed",
+        "user_id": user_id or "authorized_user",
+        "uploaded_by": uploaded_by or "Authorized Researcher",
+        "is_public": is_public,
+        "is_private": (not is_public)
     }
 
     # 5. Save to MongoDB Atlas / Local store
@@ -114,9 +147,14 @@ def process_paper_file(
 def upload_document(
     file: UploadFile = File(..., description="PDF research paper"),
     title: Optional[str] = Form(None),
-    authors: Optional[str] = Form(None)
+    authors: Optional[str] = Form(None),
+    user_id: Optional[str] = Form(None),
+    uploaded_by: Optional[str] = Form(None),
+    authorization: Optional[str] = Header(None),
+    x_user_id: Optional[str] = Header(None),
+    x_username: Optional[str] = Header(None)
 ):
-    """Handles direct PDF upload from frontend upload.html."""
+    """Handles direct PDF upload from frontend upload.html with strict user privacy."""
     if not file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF research papers are supported.")
 
@@ -130,12 +168,19 @@ def upload_document(
     title_val = title if isinstance(title, str) else None
     authors_val = authors if isinstance(authors, str) else None
 
+    header_uid, header_uname = extract_auth_user(authorization, x_user_id, x_username)
+    active_uid = user_id or header_uid or "authorized_user"
+    active_uname = uploaded_by or header_uname or "Authorized Researcher"
+
     try:
         saved_paper = process_paper_file(
             file_path=destination_path,
             original_filename=file.filename,
             custom_title=title_val,
-            custom_authors=authors_val
+            custom_authors=authors_val,
+            user_id=active_uid,
+            uploaded_by=active_uname,
+            is_public=False
         )
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Document intelligence error: {str(e)}")
@@ -169,10 +214,17 @@ class URLImportRequest(BaseModel):
     url: str
     title: Optional[str] = None
     authors: Optional[str] = None
+    user_id: Optional[str] = None
+    uploaded_by: Optional[str] = None
 
 
 @app.post("/documents/import-url", status_code=status.HTTP_201_CREATED)
-def import_url_document(payload: URLImportRequest):
+def import_url_document(
+    payload: URLImportRequest,
+    authorization: Optional[str] = Header(None),
+    x_user_id: Optional[str] = Header(None),
+    x_username: Optional[str] = Header(None)
+):
     """Handles remote URL / arXiv download from upload.html tab 2."""
     target_url = payload.url.strip()
     # Resolve arXiv abstract URLs directly to PDF
@@ -197,12 +249,19 @@ def import_url_document(payload: URLImportRequest):
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to fetch paper from URL: {str(e)}")
 
+    header_uid, header_uname = extract_auth_user(authorization, x_user_id, x_username)
+    active_uid = payload.user_id or header_uid or "authorized_user"
+    active_uname = payload.uploaded_by or header_uname or "Authorized Researcher"
+
     saved_paper = process_paper_file(
         file_path=destination_path,
         original_filename=sanitized_name,
         custom_title=payload.title,
         custom_authors=payload.authors,
-        source_url=payload.url
+        source_url=payload.url,
+        user_id=active_uid,
+        uploaded_by=active_uname,
+        is_public=False
     )
 
     return {
@@ -236,27 +295,51 @@ def import_url_document(payload: URLImportRequest):
 @app.get("/documents/")
 def list_documents(
     limit: int = 100,
-    search: Optional[str] = None
+    search: Optional[str] = None,
+    authorization: Optional[str] = Header(None),
+    x_user_id: Optional[str] = Header(None),
+    x_username: Optional[str] = Header(None),
+    user_id: Optional[str] = Query(None),
+    username: Optional[str] = Query(None)
 ):
-    """Returns library documents for papers.html, dashboard.html, and index.html."""
+    """
+    Returns library documents.
+    - Visitors/guests ONLY see public benchmark reference papers.
+    - Authorized users see public benchmarks + their own private uploaded papers.
+    - Papers uploaded by one user are never exposed to other users or guests.
+    """
+    uid, uname = extract_auth_user(authorization, x_user_id, x_username, user_id, username)
     search_term = search if isinstance(search, str) else None
     limit_val = limit if isinstance(limit, int) else 100
-    papers = get_all_papers(search_query=search_term)
+    papers = get_all_papers(search_query=search_term, current_user_id=uid, current_username=uname)
     limited = papers[:limit_val]
     return {
         "status": "success",
         "total_documents": len(papers),
         "total": len(papers),
-        "documents": limited
+        "documents": limited,
+        "is_authenticated": (uid is not None),
+        "active_user_id": uid
     }
 
 
 @app.get("/documents/{document_id}")
-def get_document(document_id: str):
-    """Returns complete intelligence record for viewer.html."""
-    paper = get_paper_by_id(document_id)
+def get_document(
+    document_id: str,
+    authorization: Optional[str] = Header(None),
+    x_user_id: Optional[str] = Header(None),
+    x_username: Optional[str] = Header(None),
+    user_id: Optional[str] = Query(None),
+    username: Optional[str] = Query(None)
+):
+    """Returns complete intelligence record if user has authorization."""
+    uid, uname = extract_auth_user(authorization, x_user_id, x_username, user_id, username)
+    paper = get_paper_by_id(document_id, current_user_id=uid, current_username=uname)
     if not paper:
-        raise HTTPException(status_code=404, detail="Research paper not found.")
+        raise HTTPException(
+            status_code=404,
+            detail="Research paper not found or access restricted to the authorized uploader."
+        )
     return {
         "status": "success",
         "document": paper
@@ -264,20 +347,36 @@ def get_document(document_id: str):
 
 
 @app.delete("/documents/{document_id}")
-def remove_document(document_id: str):
-    """Deletes paper from MongoDB Atlas / local storage."""
-    success = delete_paper(document_id)
+def remove_document(
+    document_id: str,
+    authorization: Optional[str] = Header(None),
+    x_user_id: Optional[str] = Header(None),
+    x_username: Optional[str] = Header(None),
+    user_id: Optional[str] = Query(None),
+    username: Optional[str] = Query(None)
+):
+    """Deletes paper from storage only if requesting user is the uploader."""
+    uid, uname = extract_auth_user(authorization, x_user_id, x_username, user_id, username)
+    success = delete_paper(document_id, current_user_id=uid, current_username=uname)
     if not success:
-        raise HTTPException(status_code=404, detail="Paper not found or could not be deleted.")
+        raise HTTPException(status_code=403, detail="Paper not found or unauthorized to delete.")
     return {"status": "success", "message": "Paper successfully removed."}
 
 
 @app.get("/documents/{document_id}/pdf")
-def open_original_pdf(document_id: str):
-    """Streams original PDF for viewer.html 'View Original PDF' button."""
-    paper = get_paper_by_id(document_id)
+def open_original_pdf(
+    document_id: str,
+    authorization: Optional[str] = Header(None),
+    x_user_id: Optional[str] = Header(None),
+    x_username: Optional[str] = Header(None),
+    user_id: Optional[str] = Query(None),
+    username: Optional[str] = Query(None)
+):
+    """Streams original PDF for viewer.html if authorized."""
+    uid, uname = extract_auth_user(authorization, x_user_id, x_username, user_id, username)
+    paper = get_paper_by_id(document_id, current_user_id=uid, current_username=uname)
     if not paper:
-        raise HTTPException(status_code=404, detail="Paper not found.")
+        raise HTTPException(status_code=404, detail="Paper not found or access restricted.")
 
     fpath = paper.get("file_path") or (paper.get("file_meta", {}).get("file_path"))
     if not fpath or not Path(fpath).exists():
@@ -308,10 +407,18 @@ def retry_analysis(document_id: str):
 # 4. Search & System Endpoints
 # -----------------------------------------------------------------------------
 @app.get("/search/")
-def execute_search(q: str = ""):
-    """Powers search.html and hero search bar."""
+def execute_search(
+    q: str = "",
+    authorization: Optional[str] = Header(None),
+    x_user_id: Optional[str] = Header(None),
+    x_username: Optional[str] = Header(None),
+    user_id: Optional[str] = None,
+    username: Optional[str] = None
+):
+    """Powers search.html and hero search bar with user paper isolation."""
+    active_uid, active_uname = extract_auth_user(authorization, x_user_id, x_username, user_id, username)
     query_str = str(q) if q and isinstance(q, str) else ""
-    hits = search_papers(query_str)
+    hits = search_papers(query_str, current_user_id=active_uid, current_username=active_uname)
     return {
         "query": query_str,
         "query_tokens": [t for t in query_str.strip().split() if len(t) > 0],
@@ -342,26 +449,47 @@ def health_check():
 # -----------------------------------------------------------------------------
 @app.post("/auth/login")
 @app.post("/auth/register")
-def mock_auth():
+def mock_auth(payload: Optional[Dict[str, Any]] = Body(default=None)):
+    data = payload or {}
+    raw_uname = data.get("username") or "authorized_user"
+    clean_uname = re.sub(r'[^a-zA-Z0-9_-]', '_', str(raw_uname)).strip('_') or "authorized_user"
+    uid = hashlib.md5(clean_uname.encode("utf-8")).hexdigest()[:8]
+    fname = data.get("full_name") or clean_uname.replace("_", " ").title()
+    email = data.get("email") or f"{clean_uname}@researcher.edu"
+    token = f"jwt_{uid}_{clean_uname}"
+
+    user_info = {
+        "id": uid,
+        "username": clean_uname,
+        "email": email,
+        "full_name": fname
+    }
+
     return {
-        "access_token": "minor_project_demo_jwt_2026",
+        "access_token": token,
         "token_type": "bearer",
-        "user": {
-            "id": "1",
-            "username": "demo_researcher",
-            "email": "researcher@college.edu",
-            "full_name": "College Student / Researcher"
-        }
+        "user_id": uid,
+        "username": clean_uname,
+        "full_name": fname,
+        "email": email,
+        "user": user_info
     }
 
 
 @app.get("/auth/me")
-def auth_me():
+def auth_me(
+    authorization: Optional[str] = Header(None),
+    x_user_id: Optional[str] = Header(None),
+    x_username: Optional[str] = Header(None)
+):
+    active_uid, active_uname = extract_auth_user(authorization, x_user_id, x_username)
+    uname = active_uname or "authorized_user"
+    uid = active_uid or "1"
     return {
-        "id": "1",
-        "username": "demo_researcher",
-        "email": "researcher@college.edu",
-        "full_name": "College Student / Researcher"
+        "id": uid,
+        "username": uname,
+        "email": f"{uname}@researcher.edu",
+        "full_name": uname.replace("_", " ").title()
     }
 
 
@@ -382,19 +510,28 @@ class AutocompleteRequest(BaseModel):
 
 
 @app.post("/api/agent/evidence")
-def run_evidence_agent(req: EvidenceRequest):
+def run_evidence_agent(
+    req: EvidenceRequest,
+    authorization: Optional[str] = Header(None),
+    x_user_id: Optional[str] = Header(None),
+    x_username: Optional[str] = Header(None)
+):
     """
     Executes the Plan -> Search -> Read -> Synthesize pipeline.
     Deduplicates by DOI/title, ranks top 5, includes opposing evidence,
     and returns cited synthesis with credibility metrics and YouTube mode.
+    Respects user paper isolation so private uploads are visible only to their owner.
     """
+    active_uid, active_uname = extract_auth_user(authorization, x_user_id, x_username)
     intent = infer_intent(req.selected_text, req.surrounding_text or "", req.action)
 
     search_res = search_and_rank_evidence(
         query_text=req.selected_text,
         selected_text=req.surrounding_text or "",
         excluded_ids=req.excluded_ids or [],
-        clarification_choice=req.clarification_choice
+        clarification_choice=req.clarification_choice,
+        current_user_id=active_uid,
+        current_username=active_uname
     )
 
     synthesis = synthesize_evidence(

@@ -304,6 +304,26 @@
 
         // PDF Ingestion Setup
         document.addEventListener("DOMContentLoaded", () => {
+            // Update Auth status banner
+            const user = typeof getCurrentUser === "function" ? getCurrentUser() : null;
+            const authText = document.getElementById("upload-auth-text");
+            const authLink = document.getElementById("upload-auth-link");
+            const authBanner = document.getElementById("upload-auth-banner");
+            if (user && authBanner && authText) {
+                authBanner.style.background = "#f0fdf4";
+                authBanner.style.borderColor = "#bbf7d0";
+                authText.innerHTML = `Signed in as <strong>${escapeHtml(user.full_name || user.username)}</strong>. Papers you upload are saved <strong>privately</strong> and visible only to you.`;
+                if (authLink) authLink.style.display = "none";
+            } else if (authBanner && authText) {
+                authBanner.style.background = "#eff6ff";
+                authBanner.style.borderColor = "#bfdbfe";
+                authText.innerHTML = `🔒 <strong>Visitor Mode:</strong> Please sign in so your uploaded papers are saved securely to your researcher account.`;
+                if (authLink) {
+                    authLink.style.display = "inline";
+                    authLink.textContent = "Sign In / Register →";
+                }
+            }
+
             const dropzone = document.getElementById("dropzone");
             const fileInput = document.getElementById("pdf-file-input");
             const filePreview = document.getElementById("file-preview");
@@ -392,6 +412,8 @@
                 e.preventDefault();
                 if (!selectedPdfFiles || selectedPdfFiles.length === 0) return;
 
+                const currentUser = typeof getCurrentUser === "function" ? getCurrentUser() : null;
+
                 if (selectedPdfFiles.length === 1) {
                     const formData = new FormData();
                     formData.append("file", selectedPdfFiles[0]);
@@ -399,6 +421,10 @@
                     const authorsVal = document.getElementById("paper-authors").value.trim();
                     if (titleVal) formData.append("title", titleVal);
                     if (authorsVal) formData.append("authors", authorsVal);
+                    if (currentUser) {
+                        formData.append("user_id", currentUser.id);
+                        formData.append("uploaded_by", currentUser.username);
+                    }
 
                     await executeIngestion(`${API_BASE_URL}/documents/upload`, formData, true);
                 } else {
@@ -412,10 +438,13 @@
                 const urlVal = document.getElementById("paper-url-input").value.trim();
                 if (!urlVal) return;
 
+                const currentUser = typeof getCurrentUser === "function" ? getCurrentUser() : null;
                 const payload = {
                     url: urlVal,
                     title: document.getElementById("url-paper-title").value.trim() || null,
-                    authors: document.getElementById("url-paper-authors").value.trim() || null
+                    authors: document.getElementById("url-paper-authors").value.trim() || null,
+                    user_id: currentUser ? currentUser.id : null,
+                    uploaded_by: currentUser ? currentUser.username : null
                 };
 
                 await executeIngestion(`${API_BASE_URL}/documents/import-url`, JSON.stringify(payload), false);
@@ -446,10 +475,17 @@
 
                 const formData = new FormData();
                 formData.append("file", file);
+                const currentUser = typeof getCurrentUser === "function" ? getCurrentUser() : null;
+                const authHeaders = typeof getAuthHeaders === "function" ? getAuthHeaders() : {};
+                if (currentUser) {
+                    formData.append("user_id", currentUser.id);
+                    formData.append("uploaded_by", currentUser.username);
+                }
 
                 try {
                     const response = await fetch(`${API_BASE_URL}/documents/upload`, {
                         method: "POST",
+                        headers: authHeaders,
                         body: formData
                     });
                     const data = await response.json();
@@ -541,9 +577,7 @@
             }, 800);
 
             try {
-                const headers = {};
-                const token = getAuthToken();
-                if (token) headers["Authorization"] = `Bearer ${token}`;
+                const headers = typeof getAuthHeaders === "function" ? getAuthHeaders() : {};
                 if (!isFormData) headers["Content-Type"] = "application/json";
 
                 const response = await fetch(endpoint, {

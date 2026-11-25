@@ -108,7 +108,10 @@
       "status": "verified"
     },
     "related_papers_count": 18,
-    "evidence_source_type": "full_text"
+    "evidence_source_type": "full_text",
+    "is_public": true,
+    "user_id": "system",
+    "uploaded_by": "System Academic Benchmark"
   },
   {
     "title": "A High-Frequency Flux-Driven DC-SQUID Threshold Detector at the Single-Microwave-Photon Energy Scale: A Numerical Feasibility Study",
@@ -211,7 +214,10 @@
       "status": "verified"
     },
     "related_papers_count": 9,
-    "evidence_source_type": "full_text"
+    "evidence_source_type": "full_text",
+    "is_public": true,
+    "user_id": "system",
+    "uploaded_by": "System Academic Benchmark"
   },
   {
     "title": "1 Curling Superconducting Vortices by Nematic",
@@ -319,7 +325,10 @@
       "status": "verified"
     },
     "related_papers_count": 15,
-    "evidence_source_type": "full_text"
+    "evidence_source_type": "full_text",
+    "is_public": true,
+    "user_id": "system",
+    "uploaded_by": "System Academic Benchmark"
   },
   {
     "title": "Oscillatory superconducting proximity effects in a buried Pt interlayer detected by FMR",
@@ -422,7 +431,10 @@
       "status": "verified"
     },
     "related_papers_count": 11,
-    "evidence_source_type": "abstract_only"
+    "evidence_source_type": "abstract_only",
+    "is_public": true,
+    "user_id": "system",
+    "uploaded_by": "System Academic Benchmark"
   },
   {
     "title": "A Review of Domestic Dogs' (Canis Familiaris) Human-Like Behaviors: Or Why Behavior Analysts Should Stop Worrying and Love Their Dogs - PMC",
@@ -516,7 +528,10 @@
     "research_gaps": [
       "Empirical validation across higher-dimensional, noisy out-of-distribution real-world benchmarks.",
       "Analyzing trade-offs between inference latency and energy efficiency on constrained edge hardware."
-    ]
+    ],
+    "is_public": false,
+    "user_id": "authorized_user",
+    "uploaded_by": "Authorized Researcher"
   },
   {
     "id": "b4e189ac",
@@ -582,7 +597,10 @@
     "analysis_source": "algorithmic_heuristics",
     "processing_status": "completed",
     "created_at": "2026-11-25T14:00:00.000000+00:00",
-    "uploaded_at": "2026-11-25T14:00:00.000000+00:00"
+    "uploaded_at": "2026-11-25T14:00:00.000000+00:00",
+    "is_public": true,
+    "user_id": "system",
+    "uploaded_by": "System Academic Benchmark"
   },
   {
     "id": "7c89f132",
@@ -648,6 +666,9 @@
     "analysis_source": "algorithmic_heuristics",
     "processing_status": "completed",
     "created_at": "2026-11-25T14:10:00.000000+00:00",
-    "uploaded_at": "2026-11-25T14:10:00.000000+00:00"
+    "uploaded_at": "2026-11-25T14:10:00.000000+00:00",
+    "is_public": true,
+    "user_id": "system",
+    "uploaded_by": "System Academic Benchmark"
   }
 ]
