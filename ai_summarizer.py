@@ -17,7 +17,7 @@ logger = logging.getLogger("minor_project.summarizer")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY", "")
 
 
-def bound_word_count(text: str, min_words: int = 100, max_words: int = 200) -> str:
+def bound_word_count(text: str, min_words: int = 25, max_words: int = 50) -> str:
     """Ensures summary is cleanly bounded between 100 and 200 words."""
     if not text:
         return ""
