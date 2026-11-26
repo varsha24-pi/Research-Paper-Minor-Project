@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Search Papers - Researcher</title>
+    <script>
+        window.API_BASE_URL = window.API_BASE_URL || ((typeof window !== "undefined" && window.location.origin && window.location.origin.startsWith("http")) 
+            ? window.location.origin 
+            : "http://127.0.0.1:8000");
+        var API_BASE_URL = window.API_BASE_URL;
+    </script>
     <link rel="stylesheet" href="css/style.css">
     <style>
         .search-page-header {

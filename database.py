@@ -5,6 +5,7 @@ Includes automatic local JSON fallback to ensure seamless presentations even if 
 """
 
 import os
+import re
 import json
 import logging
 from typing import List, Dict, Any, Optional
@@ -375,7 +376,11 @@ def search_papers(
         logger.warning(f"Semantic search vectorization error: {e}")
         sims = [0.0] * len(all_docs)
 
-    tokens = [t.lower() for t in query_str.strip().split() if len(t) > 1]
+    academic_stops = set(ACADEMIC_STOP_WORDS).union(sk_text.ENGLISH_STOP_WORDS)
+    tokens = [t.lower() for t in re.findall(r"\b[a-zA-Z0-9_-]{3,}\b", query_str) if t.lower() not in academic_stops]
+    if not tokens:
+        tokens = [t.lower() for t in query_str.strip().split() if len(t) > 2]
+
     matches = []
 
     for idx, doc in enumerate(all_docs):
@@ -387,7 +392,8 @@ def search_papers(
         kw_bonus = 0.20 if any(any(t in kw for kw in kws_list) for t in tokens) else 0.0
         total_score = min(sim * 1.5 + title_bonus + kw_bonus, 1.0)
 
-        if total_score > 0.04 or any(t in title_l for t in tokens):
+        # Require genuine relevance: cosine sim >= 0.08 or matching non-stopword tokens
+        if total_score >= 0.12 or (title_bonus > 0 and sim > 0.02):
             snippet_source = doc.get("summary") or doc.get("abstract") or "Matched research paper."
             snippet = snippet_source[:260] + ("..." if len(snippet_source) > 260 else "")
             matched_kws = [k for k in kws_list if any(t in k for t in tokens)]
