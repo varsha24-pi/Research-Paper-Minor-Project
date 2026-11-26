@@ -158,6 +158,16 @@ def upload_document(
     x_username: Optional[str] = Header(None)
 ):
     """Handles direct PDF upload from frontend upload.html with strict user privacy."""
+    header_uid, header_uname = extract_auth_user(authorization, x_user_id, x_username)
+    active_uid = user_id or header_uid
+    active_uname = uploaded_by or header_uname
+
+    if not active_uid:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="You must be signed in to upload and analyze research papers. Please log in first."
+        )
+
     if not file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF research papers are supported.")
 
@@ -170,10 +180,6 @@ def upload_document(
 
     title_val = title if isinstance(title, str) else None
     authors_val = authors if isinstance(authors, str) else None
-
-    header_uid, header_uname = extract_auth_user(authorization, x_user_id, x_username)
-    active_uid = user_id or header_uid or "authorized_user"
-    active_uname = uploaded_by or header_uname or "Authorized Researcher"
 
     try:
         saved_paper = process_paper_file(
@@ -229,6 +235,16 @@ def import_url_document(
     x_username: Optional[str] = Header(None)
 ):
     """Handles remote URL / arXiv download from upload.html tab 2."""
+    header_uid, header_uname = extract_auth_user(authorization, x_user_id, x_username)
+    active_uid = payload.user_id or header_uid
+    active_uname = payload.uploaded_by or header_uname
+
+    if not active_uid:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="You must be signed in to import and analyze research papers. Please log in first."
+        )
+
     target_url = payload.url.strip()
     # Resolve arXiv abstract URLs directly to PDF
     if "arxiv.org/abs/" in target_url:
@@ -251,10 +267,6 @@ def import_url_document(
             shutil.copyfileobj(response, out_file)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed to fetch paper from URL: {str(e)}")
-
-    header_uid, header_uname = extract_auth_user(authorization, x_user_id, x_username)
-    active_uid = payload.user_id or header_uid or "authorized_user"
-    active_uname = payload.uploaded_by or header_uname or "Authorized Researcher"
 
     saved_paper = process_paper_file(
         file_path=destination_path,

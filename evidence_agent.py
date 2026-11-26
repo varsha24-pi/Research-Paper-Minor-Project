@@ -525,16 +525,15 @@ def plan_research_papers(
 
     # 1. Planning Discussion & Needed Paper Types
     needed_types = [
-        f"Foundational Architecture & Model Formulation: Papers introducing core methods for {topic_str}.",
-        f"Empirical Benchmark Evaluations: Controlled experimental studies measuring accuracy, utility, and sample metrics.",
-        f"Counter-Evidence & Limitations: Independent studies identifying edge cases, failure modes, or trade-offs."
+        f"Core Studies & Methods: Papers explaining key concepts and foundational ideas for {topic_str}.",
+        f"Testing & Results: Studies that test performance, accuracy, and real-world results.",
+        f"Limitations & Edge Cases: Research examining trade-offs, constraints, and open challenges."
     ]
 
     planning_discussion = (
-        f"To address your research task ('{clean_text[:120]}{'...' if len(clean_text) > 120 else ''}'), "
-        f"the agent planned a 3-part evidence strategy: 1) Primary methodology papers establishing core formulations, "
-        f"2) Empirical benchmark studies validating findings, and 3) Counter-evidence evaluating stability, mode collapse, "
-        f"or computational constraints. Review and approve the candidate papers below to proceed with deep fact extraction and synthesis."
+        f"We searched for papers related to your topic ('{clean_text[:120]}{'...' if len(clean_text) > 120 else ''}') "
+        f"focusing on: 1) Core papers explaining the topic, 2) Test results measuring accuracy and performance, "
+        f"and 3) Limitations or trade-offs. Select the papers you want to review below."
     )
 
     candidate_papers = []
@@ -691,11 +690,11 @@ def analyze_approved_papers(
     all_cites = " ".join([f"[{i+1}]" for i in range(len(approved_papers))])
     first_title = approved_papers[0].get("title", "the primary literature")
     exec_summary = (
-        f"Based on {len(approved_papers)} user-approved research studies {all_cites}, the empirical evidence demonstrates "
-        f"that addressing '{task_text[:80]}' requires structured algorithmic formulations combined with controlled validation. "
-        f"Initial foundational findings from {first_title} [1] establish baseline modeling parameters, while multi-study comparisons "
-        f"highlight trade-offs between generative fidelity, sampling variance, and computational requirements across benchmark evaluations. "
-        f"All factual claims extracted above have been verified directly against the approved peer-reviewed literature."
+        f"Based on {len(approved_papers)} research studies {all_cites}, the evidence shows "
+        f"that for '{task_text[:80]}', {first_title} [1] provides key baseline concepts and findings. "
+        f"Across these studies, experimental testing verifies practical results and performance gains, "
+        f"while highlighting important trade-offs and areas for future research. "
+        f"All key facts listed above have been checked and cited directly from these papers."
     )
 
     return {

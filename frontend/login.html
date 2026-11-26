@@ -123,10 +123,10 @@
                     </svg>
                 </div>
                 <h1 style="font-size: 1.5rem; font-weight: 800; color: var(--text-main); letter-spacing: -0.02em;">
-                    Researcher Portal
+                    Sign In or Register
                 </h1>
                 <p style="color: var(--text-muted); font-size: 0.88rem; margin-top: 0.25rem;">
-                    Sign in or create an account to manage and index research papers.
+                    Sign in or create a free account to search, upload, and summarize research papers.
                 </p>
             </div>
 
@@ -169,19 +169,19 @@
                 </div>
 
                 <button type="submit" id="login-btn" class="btn btn-primary" style="width: 100%; padding: 0.75rem; margin-top: 0.5rem;">
-                    Sign In to Account
+                    Sign In
                 </button>
             </form>
 
             <!-- REGISTER FORM -->
             <form id="register-form" class="auth-form">
                 <div class="form-group">
-                    <label for="reg-fullname" class="form-label">Full Name & Title</label>
+                    <label for="reg-fullname" class="form-label">Full Name</label>
                     <input 
                         type="text" 
                         id="reg-fullname" 
                         class="form-control" 
-                        placeholder="e.g. Dr. Alex Morgan" 
+                        placeholder="e.g. Alex Morgan" 
                         required 
                     />
                 </div>
@@ -199,12 +199,12 @@
                 </div>
 
                 <div class="form-group">
-                    <label for="reg-email" class="form-label">Institutional Email</label>
+                    <label for="reg-email" class="form-label">Email Address</label>
                     <input 
                         type="email" 
                         id="reg-email" 
                         class="form-control" 
-                        placeholder="alex@university.edu" 
+                        placeholder="alex@example.com" 
                         required 
                     />
                 </div>
@@ -219,11 +219,11 @@
                         minlength="6" 
                         required 
                     />
-                    <div class="form-hint">Stored securely using bcrypt with 12-round salt.</div>
+                    <div class="form-hint">Your password is encrypted and kept private.</div>
                 </div>
 
                 <button type="submit" id="reg-btn" class="btn btn-primary" style="width: 100%; padding: 0.75rem; margin-top: 0.5rem;">
-                    Create Researcher Account
+                    Create Account
                 </button>
             </form>
 
@@ -245,9 +245,10 @@
 
     <script src="js/app.js"></script>
     <script>
-        const API_BASE_URL = (typeof window !== "undefined" && window.location.origin && window.location.origin.startsWith("http")) 
+        window.API_BASE_URL = window.API_BASE_URL || (typeof window !== "undefined" && window.location.origin && window.location.origin.startsWith("http") 
             ? window.location.origin 
-            : (window.API_BASE_URL || "http://127.0.0.1:8000");
+            : "http://127.0.0.1:8000");
+        var API_BASE_URL = window.API_BASE_URL;
 
         const alertBox = document.getElementById("auth-alert");
         const urlParams = new URLSearchParams(window.location.search);

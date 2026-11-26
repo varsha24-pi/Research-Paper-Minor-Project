@@ -29,11 +29,12 @@
         <nav>
             <ul class="nav-links">
                 <li><a href="index.html" class="active">Home</a></li>
-                <li><a href="workspace.html" style="color: #2563eb; font-weight: 700;">Evidence Agent</a></li>
-                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="workspace.html" style="color: #2563eb; font-weight: 700;">Research Assistant</a></li>
+                <li><a href="search.html">Search Papers</a></li>
                 <li><a href="upload.html">Upload Paper</a></li>
-                <li><a href="search.html">Search</a></li>
                 <li><a href="papers.html">Paper Library</a></li>
+                <li><a href="dashboard.html">Dashboard</a></li>
+                <li><a href="login.html" id="nav-signin-link" style="color: var(--primary); font-weight: 700;">Sign In</a></li>
             </ul>
         </nav>
 
@@ -54,21 +55,28 @@
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"></path>
                 </svg>
-                <span>Academic Intelligence & Document Discovery</span>
+                <span>Simple & Fast Paper Research</span>
             </div>
             
-            <h1><span>Research Paper</span> Intelligence System</h1>
+            <h1>Find Facts & Summarize <span>Research Papers</span></h1>
             <p class="hero-desc">
-                Extract structured sections, generate statistical domain keywords, and retrieve relevant scientific papers with instant contextual snippets.
+                Search academic papers, get clear summaries, and extract verified facts with citations in plain, simple English.
             </p>
 
             <!-- Call-to-Action Buttons -->
             <div class="hero-cta">
                 <a href="workspace.html" class="btn btn-primary" style="background: #2563eb; border-color: #2563eb;">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
                     </svg>
-                    Evidence Workspace
+                    Research Assistant
+                </a>
+                <a href="search.html" class="btn btn-secondary">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    Search Papers
                 </a>
                 <a href="upload.html" class="btn btn-secondary">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -78,20 +86,12 @@
                     </svg>
                     Upload Paper
                 </a>
-                <a href="search.html" class="btn btn-secondary">
+                <a href="login.html" id="hero-signin-btn" class="btn btn-outline" style="border-color: #2563eb; color: #2563eb; font-weight: 700;">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
                     </svg>
-                    Search Papers
-                </a>
-                <a href="dashboard.html" class="btn btn-outline">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="18" y1="20" x2="18" y2="10"></line>
-                        <line x1="12" y1="20" x2="12" y2="4"></line>
-                        <line x1="6" y1="20" x2="6" y2="14"></line>
-                    </svg>
-                    Dashboard
+                    Sign In / Register
                 </a>
             </div>
 
@@ -247,7 +247,7 @@
                         </svg>
                     </div>
                     <h3>NLP Section Segmentation</h3>
-                    <p>Detects and segments papers into standard sections: Abstract, Introduction, Methodology, Results, and Conclusion.</p>
+                    <p>Automatically separates papers into clear sections: Summary, Introduction, Methods, Results, and Conclusions.</p>
                 </div>
 
                 <div class="feature-card">
@@ -257,8 +257,8 @@
                             <line x1="7" y1="7" x2="7.01" y2="7"></line>
                         </svg>
                     </div>
-                    <h3>TF-IDF Keyword Weighting</h3>
-                    <p>Statistical NLP filtering extracts top domain concepts and assigns relevance scores for precise categorization.</p>
+                    <h3>Key Topic Extraction</h3>
+                    <p>Finds the most important topics and terms so you can understand the core subject in seconds.</p>
                 </div>
 
                 <div class="feature-card">
@@ -268,8 +268,8 @@
                             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                         </svg>
                     </div>
-                    <h3>Vector Space Search Engine</h3>
-                    <p>Calculates transparent cosine similarity scores across titles, keywords, and sections, returning highlighted context snippets.</p>
+                    <h3>Smart Paper Search</h3>
+                    <p>Finds the best matching research papers with highlighted sentences matching your query.</p>
                 </div>
             </div>
         </section>
@@ -281,18 +281,37 @@
     <footer class="footer">
         <div class="footer-links">
             <a href="index.html">Home</a>
-            <a href="dashboard.html">Dashboard</a>
-            <a href="upload.html">Upload</a>
+            <a href="workspace.html">Assistant</a>
             <a href="search.html">Search</a>
+            <a href="upload.html">Upload</a>
             <a href="papers.html">Library</a>
-            <a href="/docs" target="_blank">Swagger API</a>
+            <a href="dashboard.html">Dashboard</a>
+            <a href="login.html">Sign In</a>
         </div>
         <p>Research Paper Intelligence System • College Minor Project</p>
-        <p style="font-size: 0.78rem; margin-top: 0.35rem; color: #94a3b8;">
-            FastAPI Backend • PyMuPDF & Scikit-Learn NLP • MongoDB Atlas & Local Storage
-        </p>
     </footer>
 
     <script src="js/app.js"></script>
+    <script>
+        window.API_BASE_URL = window.API_BASE_URL || (typeof window !== "undefined" && window.location.origin && window.location.origin.startsWith("http") 
+            ? window.location.origin 
+            : "http://127.0.0.1:8000");
+        var API_BASE_URL = window.API_BASE_URL;
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const user = typeof getCurrentUser === "function" ? getCurrentUser() : null;
+            const heroSignin = document.getElementById("hero-signin-btn");
+            const navSignin = document.getElementById("nav-signin-link");
+            if (user) {
+                if (heroSignin) {
+                    heroSignin.href = "papers.html";
+                    heroSignin.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"></path></svg> My Papers`;
+                }
+                if (navSignin) {
+                    navSignin.style.display = "none";
+                }
+            }
+        });
+    </script>
 </body>
 </html>
