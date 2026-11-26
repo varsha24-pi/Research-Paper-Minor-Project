@@ -342,45 +342,56 @@ def search_papers(
     current_user_id: Optional[str] = None,
     current_username: Optional[str] = None
 ) -> List[Dict[str, Any]]:
-    """Performs intelligent search matching respecting user authorization."""
+    """Performs semantic vector search matching respecting user authorization."""
     all_docs = get_all_papers(current_user_id=current_user_id, current_username=current_username)
     if not query_str or not query_str.strip():
         return all_docs[:20]
 
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    from sklearn.metrics.pairwise import cosine_similarity
+    from nlp_engine import ACADEMIC_STOP_WORDS
+    from sklearn.feature_extraction import text as sk_text
+
+    stop_words = list(sk_text.ENGLISH_STOP_WORDS.union(ACADEMIC_STOP_WORDS))
+
+    doc_texts = []
+    for doc in all_docs:
+        title = doc.get("title", "")
+        abstract = doc.get("abstract", "")
+        summary = doc.get("summary", "")
+        kws = " ".join([k.get("keyword", "") if isinstance(k, dict) else str(k) for k in doc.get("keywords", [])])
+        doc_texts.append(f"{title} {title} {kws} {abstract} {summary}")
+
+    try:
+        vectorizer = TfidfVectorizer(
+            stop_words=stop_words,
+            ngram_range=(1, 2),
+            token_pattern=r"(?u)\b[a-zA-Z][a-zA-Z0-9_-]{2,}\b"
+        )
+        all_texts = [query_str] + doc_texts
+        tfidf_matrix = vectorizer.fit_transform(all_texts)
+        sims = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:])[0]
+    except Exception as e:
+        logger.warning(f"Semantic search vectorization error: {e}")
+        sims = [0.0] * len(all_docs)
+
     tokens = [t.lower() for t in query_str.strip().split() if len(t) > 1]
     matches = []
 
-    for doc in all_docs:
-        score = 0.0
-        matched_field = "content"
+    for idx, doc in enumerate(all_docs):
+        sim = float(sims[idx]) if idx < len(sims) else 0.0
         title_l = (doc.get("title") or "").lower()
-        abstract_l = (doc.get("abstract") or "").lower()
-        summary_l = (doc.get("summary") or "").lower()
         kws_list = [k.get("keyword", "").lower() if isinstance(k, dict) else str(k).lower() for k in doc.get("keywords", [])]
-        kws_str = " ".join(kws_list)
 
-        for token in tokens:
-            if token in title_l:
-                score += 10.0
-                matched_field = "title"
-            if any(token in kw for kw in kws_list):
-                score += 6.0
-                if matched_field != "title":
-                    matched_field = "keywords"
-            if token in summary_l:
-                score += 4.0
-                if matched_field == "content":
-                    matched_field = "summary"
-            if token in abstract_l:
-                score += 3.0
-                if matched_field == "content":
-                    matched_field = "abstract"
+        title_bonus = 0.35 if any(t in title_l for t in tokens) else 0.0
+        kw_bonus = 0.20 if any(any(t in kw for kw in kws_list) for t in tokens) else 0.0
+        total_score = min(sim * 1.5 + title_bonus + kw_bonus, 1.0)
 
-        if score > 0:
+        if total_score > 0.04 or any(t in title_l for t in tokens):
             snippet_source = doc.get("summary") or doc.get("abstract") or "Matched research paper."
             snippet = snippet_source[:260] + ("..." if len(snippet_source) > 260 else "")
             matched_kws = [k for k in kws_list if any(t in k for t in tokens)]
-            match_pct = int(round(min(score / 15.0, 1.0) * 100))
+            match_pct = int(round(total_score * 100))
             matches.append({
                 "id": doc.get("id"),
                 "document_id": doc.get("id"),
@@ -389,10 +400,10 @@ def search_papers(
                 "publication_year": doc.get("publication_year"),
                 "total_pages": doc.get("total_pages") or (doc.get("file_meta") or {}).get("total_pages", 1),
                 "uploaded_at": doc.get("uploaded_at") or doc.get("created_at"),
-                "relevance_score": round(min(score / 15.0, 1.0), 2),
-                "score": round(min(score / 15.0, 1.0), 2),
+                "relevance_score": round(total_score, 2),
+                "score": round(total_score, 2),
                 "relevance_percentage": f"{match_pct}% Match",
-                "matched_field": matched_field,
+                "matched_field": "semantic_vector",
                 "matched_keywords": matched_kws,
                 "snippet": snippet,
                 "summary": doc.get("summary", ""),
