@@ -746,7 +746,7 @@ body {
 
 .dropzone {
     border: 2px dashed #cbd5e1;
-    background-color: #fafbfc;
+    background-color: #ff0000;
     border-radius: var(--radius-lg);
     padding: 3rem 2rem;
     text-align: center;
