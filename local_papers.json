@@ -1,5 +1,103 @@
 [
   {
+    "title": "CHORD-ESN / Hodge-Projected ESN Complete Learning Guide",
+    "authors": "python-docx",
+    "publication_year": 2013,
+    "filename": "CHORD_ESN_Learning_Guide.pdf",
+    "file_path": "D:\\Project\\implementation\\research-paper-minor-project\\uploads\\CHORD_ESN_Learning_Guide.pdf",
+    "file_size_bytes": 107712,
+    "total_pages": 8,
+    "total_words": 2372,
+    "abstract": "",
+    "keywords": [
+      {
+        "keyword": "equation",
+        "score": 1.0
+      },
+      {
+        "keyword": "step",
+        "score": 0.693
+      },
+      {
+        "keyword": "discrete",
+        "score": 0.56
+      },
+      {
+        "keyword": "chord-esn",
+        "score": 0.544
+      },
+      {
+        "keyword": "reservoir",
+        "score": 0.544
+      },
+      {
+        "keyword": "high",
+        "score": 0.53
+      },
+      {
+        "keyword": "matrix",
+        "score": 0.489
+      },
+      {
+        "keyword": "channel",
+        "score": 0.477
+      }
+    ],
+    "summary": "Original goal: State the memory problem in ESNs. Key idea: Topology can provide memory without near-critical tuning. Important takeaway: this section builds the paper's logic step by step. Background on RC/ESN\nOriginal goal: Recall the standard reservoir paradigm. Key idea: Only readout is trained; stability/memory are central.",
+    "summary_word_count": 47,
+    "research_problem": "Original goal: State the memory problem in ESNs. Key idea: Topology can provide memory without near-critical tuning.",
+    "methodology": "Original goal: Define CHORD-ESN. Key idea: Use 0/1/2-form channels, Hodge projection, split leaks, and heat.",
+    "key_findings": [
+      "Demonstrated empirical performance improvements over baseline benchmarks.",
+      "Validates the feasibility and effectiveness of the proposed technical approach."
+    ],
+    "outcomes": [
+      "Demonstrated empirical performance improvements over baseline benchmarks.",
+      "Validates the feasibility and effectiveness of the proposed technical approach."
+    ],
+    "limitations": [
+      "Experimental validation bounded by chosen benchmark datasets and hardware resources."
+    ],
+    "research_gaps": [
+      "/ conclusion\nOriginal goal: Explain limits and future work.",
+      "Key idea: Benefits depend on cycle structure; future work includes learned geometry and higher-dimensional \ncomplexes."
+    ],
+    "conclusion": "Conclusion indexed in paper library.",
+    "sections": [
+      {
+        "section_name": "Introduction",
+        "section_order": 1,
+        "content": "Original goal: State the memory problem in ESNs.\nKey idea: Topology can provide memory without near-critical tuning.\nImportant takeaway: this section builds the paper's logic step by step.\nBackground on RC/ESN\nOriginal goal: Recall the standard reservoir paradigm.\nKey idea: Only readout is trained; stability/memory are central.\nImportant takeaway: this section builds the paper's logic step by step.\nDEC and Hodge theory\nOriginal goal: Introduce the geometric machinery.\nKey idea: Use discrete derivatives, Laplacians, and harmonic subspaces.\nImportant takeaway: this section builds the paper's logic step by step."
+      },
+      {
+        "section_name": "Methodology",
+        "section_order": 2,
+        "content": "Original goal: Define CHORD-ESN.\nKey idea: Use 0/1/2-form channels, Hodge projection, split leaks, and heat.\nImportant takeaway: this section builds the paper's logic step by step.\nESP and complexity\nOriginal goal: Prove stability and efficiency.\nKey idea: Bound the map by a block contraction matrix.\nImportant takeaway: this section builds the paper's logic step by step.\nExperiments\nOriginal goal: Show forecasting improvements.\nKey idea: CHORD-ESN improves long-horizon fidelity and attractor statistics.\nImportant takeaway: this section builds the paper's logic step by step."
+      },
+      {
+        "section_name": "Discussion",
+        "section_order": 3,
+        "content": "/ conclusion\nOriginal goal: Explain limits and future work.\nKey idea: Benefits depend on cycle structure; future work includes learned geometry and higher-dimensional \ncomplexes.\nImportant takeaway: this section builds the paper's logic step by step.\n\n9. Experiments, metrics, and baselines\nThe paper evaluates seven time series: Lorenz-63, R\u00f6ssler, Chen-Ueta, MIT-BIH Arrhythmia, Santa Fe Dataset B, \nInternational Sunspot Number, and BIDMC PPG & Respiration.\n\uf0b7\nSynthetic flows are integrated with RK4 at \u0394t = 0.02 and down-sampled to unit time.\n\uf0b7\nReal series are windowed/resampled to at least 4000 steps and split 80/20 train-test.\n\uf0b7\nAll channels are standardized before input.\n\uf0b7\nThe main metrics are NRMSE, normalized valid-prediction time VPT*, attractor deviation ADev, and PSD \nagreement.\n\uf0b7\nAblations test the role of Hodge split, harmonic leak, DEC heat, lawful couplings, and harmonic capacity b1.\nMetric\nWhat it measures\nWhy it matters\nNRMSE\nPointwise prediction error\nStandard accuracy score\nVPT*\nHow long the rollout stays useful\nImportant for chaotic forecasting\nADev\nAttractor geometry mismatch\nShows whether long-run dynamics \nare realistic\nPSD agreement\nFrequency content preservation\nChecks oscillatory realism\nBaselines used in the paper\n\uf0b7\nSparse-random ESN\n\uf0b7\nCycle reservoirs\n\uf0b7\nSmall-world ESN\n\uf0b7\nDeep ESN\n\uf0b7\nNVAR\n\uf0b7\nLSTM\n\uf0b7\nTCN\n\uf0b7\nSingle-layer causal Transformer\n\uf0b7\nSpiking Neural Network (SNN)\nFor fairness, readout dimension, washout, input scaling, and ridge penalty are kept comparable whenever possible.\n10. Reproduction roadmap\n1.\nInstall Python libraries: numpy, scipy, scikit-learn, networkx, matplotlib, pandas, pywavelets (optional), and a \nsparse linear algebra backend. For a full implementation you may also use a DEC or simplicial-complex library, \nor code the operators directly.\n2.\nLoad and standardize the dataset. For Lorenz/R\u00f6ssler/Chen-Ueta, generate trajectories with RK4. For real \ndatasets, resample and window them exactly as described in the paper.\n3.\nConstruct or choose a 2-complex. Build incidence matrices d0 and d1; assign Hodge stars as diagonal \nprimal/dual volume ratios.\n4.\nInitialize random mixers W_x, W_y, W_z and input maps W_in^(0), W_in^(1), W_in^(2). Scale them to \nconservative norms.\n5.\nRun the reservoir forward with tanh nonlinearity, leaky integration, DEC heat, and Hodge projection on the 1form channel.\n6.\nCollect features Phi_t. Default: x_t only; augmented: [x_t; y_ha,t] if you want to expose harmonic memory.\n7.\nTrain the linear readout with ridge regression.\n8.\nEvaluate in open-loop and closed-loop/autoregressive mode using NRMSE, VPT*, ADev, and PSD.\n9.\nRepeat over multiple seeds and perform ablations.\n\nPaper-specific settings reported in the snippets: 100-step washout; baseline grid \u03c1 {0.60, 0.75, 0.85, 0.95, 1.05}, \u03bb \n\u2208\n {0.1, 0.3, 0.5, 0.7, 0.9}, g_in {0.1, 0.3, 0.5, 0.8, 1.0}; 15 seeds; tanh nonlinearity; default readout dimension \n\u2208\n\u2208\nN=300; CHORD uses sparse DEC operators and intermittent Hodge projection.\n11. Final revision sheet\nOne-page summary: ESNs struggle to keep memory without instability; CHORD-ESN uses topology and Hodge \ndecomposition to create a slow harmonic channel.\nKey equations: spectral radius \u03c1(W), Hodge decomposition C^1 = im(d0) \n im(\u03b41) \n ker(L1), heat operator H_k(\u03c4) = \n\u2295\n\u2295\nI - \u03c4L_k, and ESP criterion \u03c1(M) < 1.\nCommon mistakes: confusing harmonic with noisy; thinking spectral radius alone determines stability; forgetting \nthat the readout is the only trained part.\nViva / interview questions: Why does topology help memory? What is the difference between exact, coexact, and \nharmonic parts? Why is Hodge projection useful? When does CHORD-ESN lose its advantage?\n12. Limitations and future improvements\n\uf0b7\nThe paper assumes a fixed oriented 2-complex and diagonal Hodge stars derived from simple duals.\n\uf0b7\nMemory gains depend on cycle structure (b1 > 0); simply connected complexes do not provide a harmonic \nchannel.\n\uf0b7\nHodge projection needs intermittent sparse SPD solves, so implementation quality and preconditioning matter.\n\uf0b7\nFuture directions include learned geometry, higher-dimensional complexes, dynamic/switching topology, faster \nprojectors, adaptive harmonic leak control, and tighter data-dependent ESP bounds.\nStudy tip: first master linear algebra, graph incidence, and ESN basics; then read DEC and Hodge decomposition; \nonly then return to the architecture and equations."
+      }
+    ],
+    "source_url": null,
+    "analysis_source": "algorithmic_heuristics",
+    "processing_status": "completed",
+    "user_id": "jwt_c4055e3a_vv",
+    "uploaded_by": "Authorized Researcher",
+    "is_public": false,
+    "is_private": true,
+    "created_at": "2026-11-26T03:27:00.963768+00:00",
+    "uploaded_at": "2026-11-26T03:27:00.963768+00:00",
+    "file_meta": {
+      "file_path": "D:\\Project\\implementation\\research-paper-minor-project\\uploads\\CHORD_ESN_Learning_Guide.pdf",
+      "file_size_bytes": 107712,
+      "total_pages": 8,
+      "total_words": 2372
+    },
+    "id": "1eff7b60"
+  },
+  {
     "id": "8dfbd6e8",
     "title": "Modeling Tabular data using Conditional GAN",
     "authors": "Lei Xu, Maria Skoularidou, Alfredo Cuesta-Infante, Kalyan Veeramachaneni",

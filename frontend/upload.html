@@ -292,6 +292,10 @@
 
     <script src="js/app.js"></script>
     <script>
+        const API_BASE_URL = (typeof window !== "undefined" && window.location.origin && window.location.origin.startsWith("http")) 
+            ? window.location.origin 
+            : (window.API_BASE_URL || "http://127.0.0.1:8000");
+
         function switchUploadTab(mode) {
             document.getElementById("tab-btn-pdf").classList.toggle("active", mode === "pdf");
             document.getElementById("tab-btn-url").classList.toggle("active", mode === "url");
@@ -489,6 +493,9 @@
                         body: formData
                     });
                     const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.detail || `Upload failed with HTTP ${response.status}`);
+                }
                     results.push(data);
                 } catch (err) {
                     results.push({ status: "failed", title: file.name, message: err.message });
@@ -587,6 +594,9 @@
                 });
 
                 const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.detail || `Upload failed with HTTP ${response.status}`);
+                }
                 progressFill.style.width = "100%";
                 progressPct.textContent = "100%";
                 progressText.textContent = "3/3 Intelligence analysis complete!";

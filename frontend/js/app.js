@@ -241,7 +241,8 @@ async function loadDashboardStatsAndRecentPapers() {
                     </a>
                 </div>
             </div>
-        `).join("");
+            `;
+        }).join("");
 
     } catch (error) {
         if (papersContainer) {
